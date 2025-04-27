@@ -842,6 +842,4 @@ The synthetic data generation process for `cars_keyspace` creates a robust, real
 
 Developers can extend the scripts by adding new tables, optimizing performance, or integrating with analytics platforms. The provided error handling, logging, and fallback mechanisms ensure robustness, while the modular design supports customization for specific use cases.
 
-For issues or contributions, contact the data engineering team or refer to the repository’s issue tracker.
-
----
+For issues or contributions, contact the data engineering tea

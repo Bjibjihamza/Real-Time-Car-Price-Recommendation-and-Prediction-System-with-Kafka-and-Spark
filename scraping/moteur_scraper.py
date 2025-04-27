@@ -54,6 +54,7 @@ def send_to_kafka(producer, topic, key, value):
         print(f"❌ Erreur lors de l'envoi à Kafka: {e}")
         return False
 
+
 def setup_driver():
     """Configure and initialize the Selenium driver."""
     options = webdriver.ChromeOptions()
@@ -70,6 +71,9 @@ def setup_driver():
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     return driver
+
+
+
 
 def sanitize_filename(filename):
     """Nettoie un nom de fichier pour qu'il soit valide sur le système d'exploitation."""

@@ -234,33 +234,32 @@ def insert_similarity(target_user_id, reference_user_id, score):
         logger.info(f"Inserted similarity between target {target_user_id} and reference {reference_user_id}: {score}")
     except Exception as e:
         logger.error(f"Failed to insert similarity for target {target_user_id} and reference {reference_user_id}: {e}")
-
 # Main function
 def main():
     try:
-        # Assess data richness
+        # Assess data richness (optional, for logging)
         user_data_scores = {user_id: data_richness(user_id) for user_id in user_ids}
-        low_data_users = [uid for uid, score in user_data_scores.items() if score < 5]
-        high_data_users = [uid for uid, score in user_data_scores.items() if score >= 5]
-        logger.info(f"Identified {len(low_data_users)} low-data users and {len(high_data_users)} high-data users")
+        logger.info(f"User data scores: {user_data_scores}")
 
         # Build vectors
         user_vectors = {user_id: build_user_vector(user_id) for user_id in user_ids}
         logger.info(f"Built vectors for {len(user_vectors)} users")
 
-        # Compute similarities: low-data (target_user_id) vs high-data (reference_user_id)
+        # Compute similarities for all unique user pairs
         similarity_threshold = 0.1
-        for target_user_id in low_data_users:
-            for reference_user_id in high_data_users:
-                if target_user_id != reference_user_id:
-                    score = cosine_similarity(user_vectors[target_user_id], user_vectors[reference_user_id])
-                    if score >= similarity_threshold:
-                        insert_similarity(target_user_id, reference_user_id, score)
+        for i, target_user_id in enumerate(user_ids):
+            for reference_user_id in user_ids[i+1:]:  # Avoid self-comparison and duplicates
+                score = cosine_similarity(user_vectors[target_user_id], user_vectors[reference_user_id])
+                if score >= similarity_threshold:
+                    insert_similarity(target_user_id, reference_user_id, score)
+                    insert_similarity(reference_user_id, target_user_id, score)  # Insert reciprocal for symmetry
         logger.info("Completed similarity calculations")
     except Exception as e:
         logger.error(f"Error computing similarities: {e}")
         raise
 
+
+    
 if __name__ == "__main__":
     try:
         main()
