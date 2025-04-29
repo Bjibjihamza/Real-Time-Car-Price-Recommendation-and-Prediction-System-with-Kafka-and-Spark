@@ -72,8 +72,8 @@ local_tz = pendulum.timezone("Africa/Casablanca")
 with DAG(
     'generate_users_data',
     default_args=default_args,
-    description='Generate synthetic users data every hour',
-    schedule_interval='@hourly',
+    description='Generate synthetic users data every minute',
+    schedule_interval='* * * * *',
     start_date=datetime(2025, 4, 29, tzinfo=local_tz),
     catchup=False,
     max_active_runs=1,

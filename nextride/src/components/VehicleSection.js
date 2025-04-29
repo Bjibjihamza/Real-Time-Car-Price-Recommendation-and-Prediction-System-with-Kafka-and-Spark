@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import { FiShare2 } from "react-icons/fi";
 import { FaRegHeart } from "react-icons/fa";
 import { MdOutlineArrowOutward } from "react-icons/md";
 import { FaCircleArrowDown } from "react-icons/fa6";
 import carimage from '../assets/images/carannonceimage.png'
-
-
-
 
 function VehicleSection() {
   const [activeTab, setActiveTab] = useState('all');
@@ -17,17 +15,16 @@ function VehicleSection() {
     setActiveTab(tab);
   };
 
-
-  // Sample vehicle data
+  // Sample vehicle data with actual IDs
   const vehicles = [
-    { id: 1, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 2, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 3, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 4, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 5, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 6, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 7, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
-    { id: 8, name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174001', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174002', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174003', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174004', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174005', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174006', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
+    { id: '123e4567-e89b-12d3-a456-426614174007', name: 'Peugeot 208', specs: '1.2 PureTech Allure Euro 6 (s/s) 5dr', price: '180 000 MAD', isNew: true },
   ];
 
   return (
@@ -74,9 +71,9 @@ function VehicleSection() {
 
         {vehicles.map((vehicle) => (
           <div key={vehicle.id} className="col">
-            <div className="card h-100 rounded-4 border-0  position-relative" style={{boxShadow : '0px 5px 4px 0px #57575787'}} >
+            <div className="card h-100 rounded-4 border-0 position-relative" style={{boxShadow : '0px 5px 4px 0px #57575787'}} >
               {vehicle.isNew && (
-                <span className="position-absolute  top-1 start-0  text-white px-2 py-1 m-2 rounded-pill" style={{backgroundColor : '#367209'  ,  fontWeight : '600' , fontSize : '12px'}}>
+                <span className="position-absolute top-1 start-0 text-white px-2 py-1 m-2 rounded-pill" style={{backgroundColor : '#367209', fontWeight : '600', fontSize : '12px'}}>
                   New
                 </span>
               )}
@@ -88,8 +85,7 @@ function VehicleSection() {
                 alt={vehicle.name} 
               />
 
-<hr className="m-0 mt-3" />
-
+              <hr className="m-0 mt-3" />
               
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start mb-2">
@@ -99,7 +95,6 @@ function VehicleSection() {
                   </div>
                   <div className="d-flex">
                     <button className="btn btn-light btn-sm p-1">
-
                       <FaRegHeart className="text-muted" />
                     </button>
                     <button className="btn btn-light btn-sm p-1 ms-1">
@@ -110,12 +105,10 @@ function VehicleSection() {
                 <hr className="my-2" />
                 <div className="d-flex justify-content-between">
                   <span className="fw-bold">{vehicle.price}</span>
-                  <a href="#" className=" text-decoration-none small d-flex align-items-center mt-2" style={{color : "#BC7328"}} >
+                  <Link to={`/car/${vehicle.id}`} className="text-decoration-none small d-flex align-items-center mt-2" style={{color : "#BC7328"}} >
                     View Details
-                    
                     <MdOutlineArrowOutward />
-
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -123,12 +116,8 @@ function VehicleSection() {
         ))}
       </div>
 
-
-
-      <div style={{display : 'flex' , alignItems :'center', width: '100%' , paddingTop :'50px'}}  >
-
-      <FaCircleArrowDown  style={{ margin :'auto' , fontSize : '60px', color : "#ffc107",  marginBottom : '30px'}}/>
-
+      <div style={{display : 'flex', alignItems :'center', width: '100%', paddingTop :'50px'}}  >
+        <FaCircleArrowDown style={{ margin :'auto', fontSize : '60px', color : "#ffc107", marginBottom : '30px'}}/>
       </div>
 
     </section>
