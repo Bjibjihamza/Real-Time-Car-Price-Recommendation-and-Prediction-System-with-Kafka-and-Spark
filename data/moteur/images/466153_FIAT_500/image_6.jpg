@@ -17,12 +17,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     	<meta property="og:image" content="https://www.moteur.ma/media/images/other/newog.jpg" />
     	    <meta name="keywords" content="Voiture au maroc, voiture occasion maroc, achat voiture, vente voiture, moto occasion, camion occasion, annonces, automobile occasion, occasion maroc, moteur.ma, motor.ma, motour.ma">
     <link rel="shortcut icon" href="https://www.moteur.ma/media/images/logo/favicons.png">
-    <link rel="stylesheet" type="text/css" href="https://www.moteur.ma/media/front/assets/css/global.css?03:16:04:25" media="screen">
+    <link rel="stylesheet" type="text/css" href="https://www.moteur.ma/media/front/assets/css/global.css?16:29:04:25" media="screen">
 	
   
   <script  src="https://www.moteur.ma/media/front/assets/js/jquery.js"></script>
 
-	<script src="https://www.moteur.ma/media/front/assets/js/custom.js?03:16:04:25"  ></script>
+	<script src="https://www.moteur.ma/media/front/assets/js/custom.js?16:29:04:25"  ></script>
 
 
 	<script src="https://www.moteur.ma/media/front/assets/js/adserver.js" ></script>
@@ -1035,18 +1035,15 @@ $(document).ready(function(){
 
 
 
-console.log("--------------------------------");
+console.log("--------------------------------"); 
+
 new PerformanceObserver((entryList) => {
   for (const entry of entryList.getEntries()) {
-    console.log('LCP candidate:', entry.startTime, entry);
+    console.log('Layout shift:', entry);
   }
-}).observe({type: 'largest-contentful-paint', buffered: true});
-console.log("*******************************");
-new PerformanceObserver((entryList) => {
-  for (const entry of entryList.getEntriesByName('first-contentful-paint')) {
-    console.log('FCP candidate:', entry.startTime, entry);
-  }
-}).observe({type: 'paint', buffered: true});
+}).observe({type: 'layout-shift', buffered: true});
+
+console.log("*******************************"); 
 </script>
         <link rel="stylesheet" type="text/css" href="https://www.moteur.ma/media/front/assets/css/select-brand.css" >
 <script src="https://www.moteur.ma/media/front/assets/js/select-brand.js"></script>
@@ -1174,7 +1171,6 @@ new PerformanceObserver((entryList) => {
 									<option title="GEELY" data-id="36" value="geely" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/geely.png">GEELY</option>
 									<option title="GMC" data-id="37" value="gmc" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/gmc.png">GMC</option>
 									<option title="GME" data-id="38" value="gme" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/gme.png">GME</option>
-									<option title="GREAT-WALL" data-id="39" value="great-wall" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/great-wall.png">GREAT-WALL</option>
 									<option title="GWM" data-id="520" value="gwm" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/gwm.png">GWM</option>
 									<option title="HAFEI" data-id="41" value="hafei" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/hafei.png">HAFEI</option>
 									<option title="HONDA" data-id="42" value="honda" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/honda.png">HONDA</option>
@@ -1249,6 +1245,7 @@ new PerformanceObserver((entryList) => {
 									<option title="VOLVO" data-id="104" value="volvo" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/volvo.png">VOLVO</option>
 									<option title="WIESMANN" data-id="105" value="wiesmann" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/wiesmann.png">WIESMANN</option>
 									<option title="WULING" data-id="469" value="wuling" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/wuling.png">WULING</option>
+									<option title="ZEEKR" data-id="533" value="zeekr" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/zeekr.png">ZEEKR</option>
 									<option title="ZOTYE" data-id="106" value="zotye" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/zotye.png">ZOTYE</option>
 							</select>
         </div>
@@ -1403,7 +1400,7 @@ new PerformanceObserver((entryList) => {
 </form>
 											<p id="nav12">
 												<span style="" class="number_ads2 pull-left">
-													24 607 annonces												</span>
+													24 365 annonces												</span>
 												<a class="pull-right" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/#form-search-modal" title=""  style="text-decoration: underline;margin-top: -7px;">
 													Recherche avancée												</a>
 											</p>
@@ -1418,6 +1415,7 @@ new PerformanceObserver((entryList) => {
 				<option title="Marque"  value="0">Marque</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/abarth.png"     title="ABARTH" data-id="453" value="abarth">ABARTH</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/alfa-romeo.png"     title="ALFA-ROMEO" data-id="5" value="alfa-romeo">ALFA-ROMEO</option>
+									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/alpine.png"     title="ALPINE" data-id="6" value="alpine">ALPINE</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/aston-martin.png"     title="ASTON-MARTIN" data-id="8" value="aston-martin">ASTON-MARTIN</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/audi.png"     title="AUDI" data-id="9" value="audi">AUDI</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/bentley.png"     title="BENTLEY" data-id="12" value="bentley">BENTLEY</option>
@@ -1425,6 +1423,7 @@ new PerformanceObserver((entryList) => {
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/byd.png"     title="BYD" data-id="18" value="byd">BYD</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/changan.png"     title="CHANGAN" data-id="525" value="changan">CHANGAN</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/chery.png"     title="CHERY" data-id="23" value="chery">CHERY</option>
+									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/chevrolet.png"     title="CHEVROLET" data-id="24" value="chevrolet">CHEVROLET</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/citroen.png"     title="CITROEN" data-id="26" value="citroen">CITROEN</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/cupra.png"     title="CUPRA" data-id="480" value="cupra">CUPRA</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/dacia.png"     title="DACIA" data-id="27" value="dacia">DACIA</option>
@@ -1469,6 +1468,7 @@ new PerformanceObserver((entryList) => {
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/toyota.png"     title="TOYOTA" data-id="99" value="toyota">TOYOTA</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/volkswagen.png"     title="VOLKSWAGEN" data-id="103" value="volkswagen">VOLKSWAGEN</option>
 									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/volvo.png"     title="VOLVO" data-id="104" value="volvo">VOLVO</option>
+									<option   data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/zeekr.png"     title="ZEEKR" data-id="533" value="zeekr">ZEEKR</option>
 							</select>
 		</div>
 		<div class="form-group col-lg-12 col-md-12 col-sm-6 col-xs-12">
@@ -1487,7 +1487,7 @@ new PerformanceObserver((entryList) => {
 											<br>
 											<p id="nav">
 												<span style="font-size: 15px;color:#615d5d;margin-top: -10px;" class=" pull-left">
-													2 168 fiches techniques												</span>
+													2 819 fiches techniques												</span>
                                                 <a class="pull-right" href="https://www.moteur.ma/fr/neuf/"  style="text-decoration: underline;margin-top: -6px;color:#f04c24!important">
 													Toutes les voiture neuves                                                </a>
                                             </p>
@@ -1502,6 +1502,7 @@ new PerformanceObserver((entryList) => {
                         				<option title="Marque"  value="0">Marque</option>
                         				                        					<option title="ABARTH" data-id="453" value="abarth" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/abarth.png">ABARTH</option>
                         				                        					<option title="ALFA-ROMEO" data-id="5" value="alfa-romeo" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/alfa-romeo.png">ALFA-ROMEO</option>
+                        				                        					<option title="ALPINE" data-id="6" value="alpine" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/alpine.png">ALPINE</option>
                         				                        					<option title="ASTON-MARTIN" data-id="8" value="aston-martin" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/aston-martin.png">ASTON-MARTIN</option>
                         				                        					<option title="AUDI" data-id="9" value="audi" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/audi.png">AUDI</option>
                         				                        					<option title="BENTLEY" data-id="12" value="bentley" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/bentley.png">BENTLEY</option>
@@ -1509,6 +1510,7 @@ new PerformanceObserver((entryList) => {
                         				                        					<option title="BYD" data-id="18" value="byd" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/byd.png">BYD</option>
                         				                        					<option title="CHANGAN" data-id="525" value="changan" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/changan.png">CHANGAN</option>
                         				                        					<option title="CHERY" data-id="23" value="chery" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/chery.png">CHERY</option>
+                        				                        					<option title="CHEVROLET" data-id="24" value="chevrolet" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/chevrolet.png">CHEVROLET</option>
                         				                        					<option title="CITROEN" data-id="26" value="citroen" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/citroen.png">CITROEN</option>
                         				                        					<option title="CUPRA" data-id="480" value="cupra" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/cupra.png">CUPRA</option>
                         				                        					<option title="DACIA" data-id="27" value="dacia" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/dacia.png">DACIA</option>
@@ -1553,6 +1555,7 @@ new PerformanceObserver((entryList) => {
                         				                        					<option title="TOYOTA" data-id="99" value="toyota" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/toyota.png">TOYOTA</option>
                         				                        					<option title="VOLKSWAGEN" data-id="103" value="volkswagen" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/volkswagen.png">VOLKSWAGEN</option>
                         				                        					<option title="VOLVO" data-id="104" value="volvo" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/volvo.png">VOLVO</option>
+                        				                        					<option title="ZEEKR" data-id="533" value="zeekr" data-thumbnail="https://www.moteur.ma/media/images/brands/mini_thumbs/zeekr.png">ZEEKR</option>
                         				                        			</select>
                                 </div>
                         		<div class="form-group col-lg-12 col-md-12 col-sm-6 col-xs-12">
@@ -1923,6 +1926,12 @@ new PerformanceObserver((entryList) => {
 																</div>
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/alpine/">
+										<img src="https://www.moteur.ma/media/images/brands/thumbs/alpine.png" alt="alpine" >
+									</a>
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/aston-martin/">
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/aston-martin.png" alt="aston-martin" >
 									</a>
@@ -1957,17 +1966,23 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/changan.png" alt="changan" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/chery/">
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/chery.png" alt="chery" >
 									</a>
 																</div>
-								
-							</div>
-						</div>
-											<div class="item clearfix  ">
-							<div class="row">
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/chevrolet/">
+										<img src="https://www.moteur.ma/media/images/brands/thumbs/chevrolet.png" alt="chevrolet" >
+									</a>
+																</div>
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/citroen/">
@@ -2010,6 +2025,11 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/fiat.png" alt="fiat" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/ford/">
@@ -2022,11 +2042,6 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/foton.png" alt="foton" >
 									</a>
 																</div>
-								
-							</div>
-						</div>
-											<div class="item clearfix  ">
-							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/gaz/">
@@ -2069,6 +2084,11 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/jaecoo.png" alt="jaecoo" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/jaguar/">
@@ -2081,11 +2101,6 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/jeep.png" alt="jeep" >
 									</a>
 																</div>
-								
-							</div>
-						</div>
-											<div class="item clearfix  ">
-							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/kia/">
@@ -2128,6 +2143,11 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/mercedes-benz.png" alt="mercedes-benz" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/mg/">
@@ -2140,11 +2160,6 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/mini.png" alt="mini" >
 									</a>
 																</div>
-								
-							</div>
-						</div>
-											<div class="item clearfix  ">
-							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/mitsubishi/">
@@ -2187,6 +2202,11 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/porsche.png" alt="porsche" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/renault/">
@@ -2199,11 +2219,6 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/seat.png" alt="seat" >
 									</a>
 																</div>
-								
-							</div>
-						</div>
-											<div class="item clearfix  ">
-							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/seres/">
@@ -2246,11 +2261,40 @@ new PerformanceObserver((entryList) => {
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/volkswagen.png" alt="volkswagen" >
 									</a>
 																</div>
+								
+							</div>
+						</div>
+											<div class="item clearfix  ">
+							<div class="row">
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/volvo/">
 										<img src="https://www.moteur.ma/media/images/brands/thumbs/volvo.png" alt="volvo" >
 									</a>
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																	<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/zeekr/">
+										<img src="https://www.moteur.ma/media/images/brands/thumbs/zeekr.png" alt="zeekr" >
+									</a>
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
+																</div>
+												
+								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
 																</div>
 												
 								<div class="col-xs-4 col-md-4 text-center" style="height:65px">
@@ -2325,123 +2369,6 @@ new PerformanceObserver((entryList) => {
 						 <div class="row">
                             <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
                                 <div class="picture"> 
-                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dacia/spring/dacia-spring-expression-3598.html">
-                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-dacia-spring-321361_.jpg" alt="">
-                                         
-                                   </a>
-                                </div>
-                            </div>
-	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
-		<div class="title_mark_model">
-			<h3  class="slug-block-news"  style="margin-top:0px"> 
-				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dacia/spring/dacia-spring-expression-3598.html">
-					DACIA Spring Expression				</a>
-			</h3>
-		</div>
-		<div class="price" style="font-weight: normal;">
-			
-			<span class="dir-left bl-promo-price" style="font-size:13px;">
-				209 000 Dhs 
-				
-				<em  style="color:#555;font-size:11px;text-decoration:line-through;">238 500 Dhs</em>
-			</span>
-
-		</div>
-	
-	 
-	
-	</div>
-	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
-		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dacia/spring/dacia-spring-expression-3598.html">
-			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
-		</a>
-	</div>
-                        </div>
-                    </div>
-				</div>
-                            <div class="teaser-item-wrapper col-md-12 col-sm-12">
-                   <div class="teaser-item">
-						 <div class="row">
-                            <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
-                                <div class="picture"> 
-                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/fiat/fiorino/fiat-fiorino-13-combi-anniversary-3625.html">
-                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-fiat-fiorino-933168_.jpg" alt="">
-                                         
-                                   </a>
-                                </div>
-                            </div>
-	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
-		<div class="title_mark_model">
-			<h3  class="slug-block-news"  style="margin-top:0px"> 
-				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/fiat/fiorino/fiat-fiorino-13-combi-anniversary-3625.html">
-					FIAT Fiorino 1.3 combi anniversary				</a>
-			</h3>
-		</div>
-		<div class="price" style="font-weight: normal;">
-			
-			<span class="dir-left bl-promo-price" style="font-size:13px;">
-				148 500 Dhs 
-				
-				<em  style="color:#555;font-size:11px;text-decoration:line-through;">155 000 Dhs</em>
-			</span>
-
-		</div>
-	
-	 
-	
-	</div>
-	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
-		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/fiat/fiorino/fiat-fiorino-13-combi-anniversary-3625.html">
-			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
-		</a>
-	</div>
-                        </div>
-                    </div>
-				</div>
-                            <div class="teaser-item-wrapper col-md-12 col-sm-12">
-                   <div class="teaser-item">
-						 <div class="row">
-                            <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
-                                <div class="picture"> 
-                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/ford/transit/ford-transit-fourgon-l4h3-euro-4-3519.html">
-                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-ford-transit-654640_.png" alt="">
-                                         
-                                   </a>
-                                </div>
-                            </div>
-	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
-		<div class="title_mark_model">
-			<h3  class="slug-block-news"  style="margin-top:0px"> 
-				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/ford/transit/ford-transit-fourgon-l4h3-euro-4-3519.html">
-					FORD Transit Fourgon l4h3 euro 4				</a>
-			</h3>
-		</div>
-		<div class="price" style="font-weight: normal;">
-			
-			<span class="dir-left bl-promo-price" style="font-size:13px;">
-				347 000 Dhs 
-				
-				<em  style="color:#555;font-size:11px;text-decoration:line-through;">390 000 Dhs</em>
-			</span>
-
-		</div>
-	
-	 
-	
-	</div>
-	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
-		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/ford/transit/ford-transit-fourgon-l4h3-euro-4-3519.html">
-			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
-		</a>
-	</div>
-                        </div>
-                    </div>
-				</div>
-                            <div class="teaser-item-wrapper col-md-12 col-sm-12">
-                   <div class="teaser-item">
-						 <div class="row">
-                            <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
-                                <div class="picture"> 
                                     <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/citroen/c3/citroen-c3-12-puretech-110-bva-feel-pack-max-3901.html">
                                                                                     <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-citroen-c3aircross-296510_.jpg" alt="">
                                          
@@ -2481,8 +2408,8 @@ new PerformanceObserver((entryList) => {
 						 <div class="row">
                             <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
                                 <div class="picture"> 
-                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/opel/grandland/opel-grandland-new-edition-mhev-12l-3950.html">
-                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-opel-nouvelgrandland-706821_.jpg" alt="">
+                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/byd/seagull/byd-seagull-50-kw-at-electrique-75-ch-3922.html">
+                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-byd-seagull-223354_.png" alt="">
                                          
                                    </a>
                                 </div>
@@ -2490,16 +2417,16 @@ new PerformanceObserver((entryList) => {
 	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
 		<div class="title_mark_model">
 			<h3  class="slug-block-news"  style="margin-top:0px"> 
-				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/opel/grandland/opel-grandland-new-edition-mhev-12l-3950.html">
-					OPEL Grandland  New edition mhev 1,2l				</a>
+				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/byd/seagull/byd-seagull-50-kw-at-electrique-75-ch-3922.html">
+					BYD Seagull 50 kw at electrique 75 ch				</a>
 			</h3>
 		</div>
 		<div class="price" style="font-weight: normal;">
 			
 			<span class="dir-left bl-promo-price" style="font-size:13px;">
-				329 000 Dhs 
+				199 900 Dhs 
 				
-				<em  style="color:#555;font-size:11px;text-decoration:line-through;">374 000 Dhs</em>
+				<em  style="color:#555;font-size:11px;text-decoration:line-through;">209 900 Dhs</em>
 			</span>
 
 		</div>
@@ -2508,7 +2435,85 @@ new PerformanceObserver((entryList) => {
 	
 	</div>
 	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
-		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/opel/grandland/opel-grandland-new-edition-mhev-12l-3950.html">
+		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/byd/seagull/byd-seagull-50-kw-at-electrique-75-ch-3922.html">
+			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
+		</a>
+	</div>
+                        </div>
+                    </div>
+				</div>
+                            <div class="teaser-item-wrapper col-md-12 col-sm-12">
+                   <div class="teaser-item">
+						 <div class="row">
+                            <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
+                                <div class="picture"> 
+                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/toyota/yaris/toyota-yaris-cross-smart-pilot-15-hybride-116-cvt-limited-3943.html">
+                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-toyota-yariscross-691624_.jpg" alt="">
+                                         
+                                   </a>
+                                </div>
+                            </div>
+	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
+		<div class="title_mark_model">
+			<h3  class="slug-block-news"  style="margin-top:0px"> 
+				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/toyota/yaris/toyota-yaris-cross-smart-pilot-15-hybride-116-cvt-limited-3943.html">
+					TOYOTA Yaris Cross smart pilot 1.5 hybride 116 cvt limited				</a>
+			</h3>
+		</div>
+		<div class="price" style="font-weight: normal;">
+			
+			<span class="dir-left bl-promo-price" style="font-size:13px;">
+				329 500 Dhs 
+				
+				<em  style="color:#555;font-size:11px;text-decoration:line-through;">375 000 Dhs</em>
+			</span>
+
+		</div>
+	
+	 
+	
+	</div>
+	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
+		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/toyota/yaris/toyota-yaris-cross-smart-pilot-15-hybride-116-cvt-limited-3943.html">
+			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
+		</a>
+	</div>
+                        </div>
+                    </div>
+				</div>
+                            <div class="teaser-item-wrapper col-md-12 col-sm-12">
+                   <div class="teaser-item">
+						 <div class="row">
+                            <div class="col-sm-5 col-md-5 col-xs-4 picture-wrapper vcenterBloc">
+                                <div class="picture"> 
+                                    <a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dfsk/e5/dfsk-e5-15-l-277-phev-at-m1-3976.html">
+                                                                                    <img src="https://www.moteur.ma/media/photos/neufs/thumbs/moteur.ma-dfsk-e5-571766_.png" alt="">
+                                         
+                                   </a>
+                                </div>
+                            </div>
+	<div class="col-sm-5 col-md-5 col-xs-6 content-wrapper vcenterBloc" style="padding-left:0;padding-right:0;">
+		<div class="title_mark_model">
+			<h3  class="slug-block-news"  style="margin-top:0px"> 
+				<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dfsk/e5/dfsk-e5-15-l-277-phev-at-m1-3976.html">
+					DFSK E5 1.5 l 277 phev at m1				</a>
+			</h3>
+		</div>
+		<div class="price" style="font-weight: normal;">
+			
+			<span class="dir-left bl-promo-price" style="font-size:13px;">
+				255 000 Dhs 
+				
+				<em  style="color:#555;font-size:11px;text-decoration:line-through;">275 000 Dhs</em>
+			</span>
+
+		</div>
+	
+	 
+	
+	</div>
+	<div class="col-sm-1 col-md-1  col-xs-1  vcenterBloc" >
+		<a href="https://www.moteur.ma/fr/neuf/fiche-technique-prix/dfsk/e5/dfsk-e5-15-l-277-phev-at-m1-3976.html">
 			<i class="go-ar-neuf-icodn icon icon-normal-right-arrow-small pull-left" ></i>
 		</a>
 	</div>
@@ -2543,7 +2548,7 @@ new PerformanceObserver((entryList) => {
 									15 - 04 - 2025   &nbsp; | 
 									<i class="icon icon-normal-glasses" style="margin:0 -3px 0 6px;">
 									</i>
-									15								</div>
+									334								</div>
 								<div class="description">
                                 <p>Salam, bnisba l les automobiles jdad machi automatique. chnou les voitures&hellip; 
                                 </p>
@@ -2567,7 +2572,7 @@ new PerformanceObserver((entryList) => {
 									12 - 04 - 2025   &nbsp; | 
 									<i class="icon icon-normal-glasses" style="margin:0 -3px 0 6px;">
 									</i>
-									72								</div>
+									341								</div>
 								<div class="description">
                                 <p>Bonjour 
 je souaite vos avis sur lachat dune audi q5
@@ -2593,7 +2598,7 @@ est ce que la puissance&hellip;
 									02 - 11 - 2021   &nbsp; | 
 									<i class="icon icon-normal-glasses" style="margin:0 -3px 0 6px;">
 									</i>
-									417								</div>
+									548								</div>
 								<div class="description">
                                 <p>Salam 
 
@@ -2623,7 +2628,7 @@ avec&hellip;
 									27 - 03 - 2025   &nbsp; | 
 									<i class="icon icon-normal-glasses" style="margin:0 -3px 0 6px;">
 									</i>
-									222								</div>
+									333								</div>
 								<div class="description">
                                 <p>Bonjour
 des avis svp par rapport à c4 picasso 2018 automatique diesel, elle&hellip; 
@@ -2648,7 +2653,7 @@ des avis svp par rapport à c4 picasso 2018 automatique diesel, elle&hellip;
 									19 - 03 - 2025   &nbsp; | 
 									<i class="icon icon-normal-glasses" style="margin:0 -3px 0 6px;">
 									</i>
-									582								</div>
+									742								</div>
 								<div class="description">
                                 <p>Slm ikhewati ramadane mobarak said
 ikhewati ladaye mocheki fi turbo hada ho 3&hellip; 
@@ -2699,27 +2704,27 @@ ikhewati ladaye mocheki fi turbo hada ho 3&hellip;
                             <div class="inner">
                                 <div class="content_shadow" >
                                                                             <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/390031/mercedes-benz-classe-s-350-ld.html">
-												7											</a>
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/464695/mercedes-benz-classe-a-.html">
+												8											</a>
                                         </div>
 									                                </div>
                                 <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/390031/mercedes-benz-classe-s-350-ld.html" title="MERCEDES-BENZ CLASSE S" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/mercedes-classe-s-235613.jpg" alt="Acheter voiture occasion MERCEDES-BENZ Classe s 350 ld au Maroc - 390031" >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/464695/mercedes-benz-classe-a-.html" title="MERCEDES-BENZ CLASSE A" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/mercedes-benz-classe-a-716986.jpg" alt="Acheter voiture occasion MERCEDES-BENZ Classe a au Maroc - 464695" >
                                     </a>
                                 </div>
                                                                 <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/390031/mercedes-benz-classe-s-350-ld.html" title="MERCEDES-BENZ CLASSE S" class="slide" >
-    MERCEDES-BENZ CLASSE S                                    </a>
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/464695/mercedes-benz-classe-a-.html" title="MERCEDES-BENZ CLASSE A" class="slide" >
+    MERCEDES-BENZ CLASSE A                                    </a>
                                 </h3>
 				<div class="price price_block">
 					  
-						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'mercedes-benz', 'ft_model': 'classe s', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/390031/1/slider" data-seller="454080" data-ad="390031" data-token="c19cc545e6cc69532a27810b1f2108a0b93f2c2e" >
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'mercedes-benz', 'ft_model': 'classe a', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/464695/1/slider" data-seller="443983" data-ad="464695" data-token="b63e7cba4fff31218de2f3b5984dc265b319d45d" >
 							<i class="icon icon-normal-phone"></i>
-							<span id="call-phone390031">
+							<span id="call-phone464695">
 								Appeler pour le prix							</span>
 						</a>
-						<span style="display:none" id="notif-call-phone390031">
+						<span style="display:none" id="notif-call-phone464695">
 							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
 									</div>
 				<div class="meta">
@@ -2727,150 +2732,7 @@ ikhewati ladaye mocheki fi turbo hada ho 3&hellip;
 						<li>
 							<i class="icon icon-normal-calendar-month"></i>
 							<span class="value_year">
-								2014							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Diesel										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								140 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/460064/volkswagen-tiguan-.html">
-												14											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/460064/volkswagen-tiguan-.html" title="VOLKSWAGEN TIGUAN" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/volkswagen-tiguan-604539.jpg" alt="Acheter voiture occasion VOLKSWAGEN Tiguan au Maroc - 460064" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/460064/volkswagen-tiguan-.html" title="VOLKSWAGEN TIGUAN" class="slide" >
-    VOLKSWAGEN TIGUAN                                    </a>
-                                </h3>
-				<div class="price price_block">
-					370 000 Dhs				</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2019							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Essence										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								59 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/469508/land-rover-range-rover-.html">
-												14											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/469508/land-rover-range-rover-.html" title="LAND-ROVER RANGE ROVER" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/land-rover-range-rover-974911.jpg" alt="Acheter voiture occasion LAND-ROVER Range rover au Maroc - 469508" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/469508/land-rover-range-rover-.html" title="LAND-ROVER RANGE ROVER" class="slide" >
-    LAND-ROVER RANGE ROVER                                    </a>
-                                </h3>
-				<div class="price price_block">
-					330 000 Dhs				</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2019							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Diesel										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								139 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466748/mercedes-benz-classe-c-220d-designo.html">
-												9											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466748/mercedes-benz-classe-c-220d-designo.html" title="MERCEDES-BENZ CLASSE C" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/mercedes-benz-classe-c-694704.jpg" alt="Acheter voiture occasion MERCEDES-BENZ Classe c 220d designo au Maroc - 466748" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466748/mercedes-benz-classe-c-220d-designo.html" title="MERCEDES-BENZ CLASSE C" class="slide" >
-    MERCEDES-BENZ CLASSE C                                    </a>
-                                </h3>
-				<div class="price price_block">
-					  
-						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'mercedes-benz', 'ft_model': 'classe c', 'ft_fuel': 'Diesel'  , 'ft_city': 'rabat'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/466748/1/slider" data-seller="450729" data-ad="466748" data-token="f14b087859a088028c0807d4e09db50bb4b53899" >
-							<i class="icon icon-normal-phone"></i>
-							<span id="call-phone466748">
-								Appeler pour le prix							</span>
-						</a>
-						<span style="display:none" id="notif-call-phone466748">
-							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
-									</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2019							</span>
+								2021							</span>
 						</li>
 						<li style="padding: 3.5px 0px;">
 															<i class="icon" style="line-height: 8px;"></i>
@@ -2895,27 +2757,27 @@ ikhewati ladaye mocheki fi turbo hada ho 3&hellip;
                             <div class="inner">
                                 <div class="content_shadow" >
                                                                             <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400147/mercedes-benz-classe-g-cayenne-coupe-hybride-platinum-edition.html">
-												10											</a>
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/437977/audi-q5-.html">
+												15											</a>
                                         </div>
 									                                </div>
                                 <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400147/mercedes-benz-classe-g-cayenne-coupe-hybride-platinum-edition.html" title="MERCEDES-BENZ CLASSE G" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/mercedes-benz-classe-g-485653.jpg" alt="Acheter voiture occasion MERCEDES-BENZ Classe g Cayenne coupe hybride platinum edition au Maroc - 400147" >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/437977/audi-q5-.html" title="AUDI Q5" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/audi-q5-sportback-944686.jpg" alt="Acheter voiture occasion AUDI Q5 au Maroc - 437977" >
                                     </a>
                                 </div>
                                                                 <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400147/mercedes-benz-classe-g-cayenne-coupe-hybride-platinum-edition.html" title="MERCEDES-BENZ CLASSE G" class="slide" >
-    MERCEDES-BENZ CLASSE G                                    </a>
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/437977/audi-q5-.html" title="AUDI Q5" class="slide" >
+    AUDI Q5                                    </a>
                                 </h3>
 				<div class="price price_block">
 					  
-						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'mercedes-benz', 'ft_model': 'classe g', 'ft_fuel': 'Essence'  , 'ft_city': 'marrakech'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/400147/1/slider" data-seller="100232" data-ad="400147" data-token="cd863170e4e75d028b1d2d5fda0f6ec1f3b2e03b" >
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'audi', 'ft_model': 'q5', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/437977/1/slider" data-seller="416557" data-ad="437977" data-token="77867cf6296b026f8a65244638c9b9f6605ca3b6" >
 							<i class="icon icon-normal-phone"></i>
-							<span id="call-phone400147">
+							<span id="call-phone437977">
 								Appeler pour le prix							</span>
 						</a>
-						<span style="display:none" id="notif-call-phone400147">
+						<span style="display:none" id="notif-call-phone437977">
 							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
 									</div>
 				<div class="meta">
@@ -2923,170 +2785,321 @@ ikhewati ladaye mocheki fi turbo hada ho 3&hellip;
 						<li>
 							<i class="icon icon-normal-calendar-month"></i>
 							<span class="value_year">
-								2019							</span>
+								2023							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Diesel										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								9 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/465818/hyundai-accent-.html">
+												8											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/465818/hyundai-accent-.html" title="HYUNDAI ACCENT" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/hyundai-accent-631084.jpg" alt="Acheter voiture occasion HYUNDAI Accent au Maroc - 465818" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/465818/hyundai-accent-.html" title="HYUNDAI ACCENT" class="slide" >
+    HYUNDAI ACCENT                                    </a>
+                                </h3>
+				<div class="price price_block">
+					175 000 Dhs				</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2024							</span>
 						</li>
 						<li style="padding: 3.5px 0px;">
 															<i class="icon" style="line-height: 8px;"></i>
 								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
 																		<span class="value_fuel">
 											Essence										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								39 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466548/peugeot-2008-allure.html">
+												10											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466548/peugeot-2008-allure.html" title="PEUGEOT 2008" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/peugeot-2008-405704.jpeg" alt="Acheter voiture occasion PEUGEOT 2008 Allure au Maroc - 466548" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/466548/peugeot-2008-allure.html" title="PEUGEOT 2008" class="slide" >
+    PEUGEOT 2008                                    </a>
+                                </h3>
+				<div class="price price_block">
+					  
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'peugeot', 'ft_model': '2008', 'ft_fuel': 'Diesel'  , 'ft_city': 'rabat'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/466548/1/slider" data-seller="450729" data-ad="466548" data-token="5f771da0686dee5616de04e5273d0ab1c4f40538" >
+							<i class="icon icon-normal-phone"></i>
+							<span id="call-phone466548">
+								Appeler pour le prix							</span>
+						</a>
+						<span style="display:none" id="notif-call-phone466548">
+							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
+									</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2023							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Diesel										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								49 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448467/audi-a6-.html">
+												11											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448467/audi-a6-.html" title="AUDI A6" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/bmw-x6-534881.jpg" alt="Acheter voiture occasion AUDI A6 au Maroc - 448467" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448467/audi-a6-.html" title="AUDI A6" class="slide" >
+    AUDI A6                                    </a>
+                                </h3>
+				<div class="price price_block">
+					  
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'audi', 'ft_model': 'a6', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/448467/1/slider" data-seller="45012" data-ad="448467" data-token="03cf31fde3172bc03dd7abadfd81faa65fc320ef" >
+							<i class="icon icon-normal-phone"></i>
+							<span id="call-phone448467">
+								Appeler pour le prix							</span>
+						</a>
+						<span style="display:none" id="notif-call-phone448467">
+							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
+									</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2022							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Diesel										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								49 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400169/jeep-renegade-.html">
+												7											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400169/jeep-renegade-.html" title="JEEP RENEGADE" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/jeep-renegade-776886.jpg" alt="Acheter voiture occasion JEEP Renegade au Maroc - 400169" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/400169/jeep-renegade-.html" title="JEEP RENEGADE" class="slide" >
+    JEEP RENEGADE                                    </a>
+                                </h3>
+				<div class="price price_block">
+					  
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'jeep', 'ft_model': 'renegade', 'ft_fuel': 'Diesel'  , 'ft_city': 'marrakech'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/400169/1/slider" data-seller="466798" data-ad="400169" data-token="e7e5c2dda553495ee301e329b53f3a673cb31b65" >
+							<i class="icon icon-normal-phone"></i>
+							<span id="call-phone400169">
+								Appeler pour le prix							</span>
+						</a>
+						<span style="display:none" id="notif-call-phone400169">
+							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
+									</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2018							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Diesel										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								129 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/463286/fiat-tipo-.html">
+												24											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/463286/fiat-tipo-.html" title="FIAT TIPO" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/fiat-tipo-976238.jpg" alt="Acheter voiture occasion FIAT Tipo au Maroc - 463286" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/463286/fiat-tipo-.html" title="FIAT TIPO" class="slide" >
+    FIAT TIPO                                    </a>
+                                </h3>
+				<div class="price price_block">
+					147 000 Dhs				</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2023							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Essence										</span>
+															</li>
+						<li>
+							<span class="label_km">
+								KM							</span>
+							<span class="value_km">
+								24 000							</span>
+						</li>
+					</ul>
+				</div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inner">
+                        <div class="grid-item">
+                            <div class="inner">
+                                <div class="content_shadow" >
+                                                                            <div class="count_image" >
+											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/461237/peugeot-208-.html">
+												8											</a>
+                                        </div>
+									                                </div>
+                                <div class="picture picture_show"  >
+                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/461237/peugeot-208-.html" title="PEUGEOT 208" class="slide">
+                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/peugeot-208-836743.jpg" alt="Acheter voiture occasion PEUGEOT 208 au Maroc - 461237" >
+                                    </a>
+                                </div>
+                                                                <h3 class="text-center title_mark_model">
+                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/461237/peugeot-208-.html" title="PEUGEOT 208" class="slide" >
+    PEUGEOT 208                                    </a>
+                                </h3>
+				<div class="price price_block">
+					  
+						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'peugeot', 'ft_model': '208', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/461237/1/slider" data-seller="464352" data-ad="461237" data-token="e221cd2cde9e18b45ff43224b911e4e157c87867" >
+							<i class="icon icon-normal-phone"></i>
+							<span id="call-phone461237">
+								Appeler pour le prix							</span>
+						</a>
+						<span style="display:none" id="notif-call-phone461237">
+							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
+									</div>
+				<div class="meta">
+					<ul class="clearfix"  style="line-height: 17px;">
+						<li>
+							<i class="icon icon-normal-calendar-month"></i>
+							<span class="value_year">
+								2023							</span>
+						</li>
+						<li style="padding: 3.5px 0px;">
+															<i class="icon" style="line-height: 8px;"></i>
+								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
+																		<span class="value_fuel">
+											Diesel										</span>
 															</li>
 						<li>
 							<span class="label_km">
 								KM							</span>
 							<span class="value_km">
 								64 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448472/mini-autre-.html">
-												10											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448472/mini-autre-.html" title="MINI AUTRE" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/mercedes-benz-classe-gle-664510.jpg" alt="Acheter voiture occasion MINI Autre au Maroc - 448472" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/448472/mini-autre-.html" title="MINI AUTRE" class="slide" >
-    MINI AUTRE                                    </a>
-                                </h3>
-				<div class="price price_block">
-					  
-						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'mini', 'ft_model': 'autre', 'ft_fuel': 'Essence'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/448472/1/slider" data-seller="45012" data-ad="448472" data-token="f9ae1932e32ac03041a98b7a605152d53c312dd0" >
-							<i class="icon icon-normal-phone"></i>
-							<span id="call-phone448472">
-								Appeler pour le prix							</span>
-						</a>
-						<span style="display:none" id="notif-call-phone448472">
-							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
-									</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2016							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Essence										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								59 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/407282/audi-a5-20-tdi-3x-s-line-quattro.html">
-												13											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/407282/audi-a5-20-tdi-3x-s-line-quattro.html" title="AUDI A5" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/audi-a5-coupe-162623.jpg" alt="Acheter voiture occasion AUDI A5 2.0 tdi 3x s-line quattro au Maroc - 407282" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/407282/audi-a5-20-tdi-3x-s-line-quattro.html" title="AUDI A5" class="slide" >
-    AUDI A5                                    </a>
-                                </h3>
-				<div class="price price_block">
-					497 000 Dhs				</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2018							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Diesel										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								100 000							</span>
-						</li>
-					</ul>
-				</div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inner">
-                        <div class="grid-item">
-                            <div class="inner">
-                                <div class="content_shadow" >
-                                                                            <div class="count_image" >
-											<i  class="icon icon-normal-photo-camera"></i>                                            <a class="count_image" href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/428684/toyota-hilux-.html">
-												8											</a>
-                                        </div>
-									                                </div>
-                                <div class="picture picture_show"  >
-                                                                        <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/428684/toyota-hilux-.html" title="TOYOTA HILUX" class="slide">
-                                                                                <img src="https://www.moteur.ma/media/photos/ads/resized/toyota-hilux-310414.jpg" alt="Acheter voiture occasion TOYOTA Hilux au Maroc - 428684" >
-                                    </a>
-                                </div>
-                                                                <h3 class="text-center title_mark_model">
-                                    <a href="https://www.moteur.ma/fr/voiture/achat-voiture-occasion/detail-annonce/428684/toyota-hilux-.html" title="TOYOTA HILUX" class="slide" >
-    TOYOTA HILUX                                    </a>
-                                </h3>
-				<div class="price price_block">
-					  
-						<a class="showphoneblock_block"  onClick="eventLeadGA({ 'page_name': 'premium_card', 'lead_type': 'show_phone', 'ft_brand': 'toyota', 'ft_model': 'hilux', 'ft_fuel': 'Diesel'  , 'ft_city': 'casablanca'});"  data-url="https://www.moteur.ma/fr/ads/call_seller/428684/1/slider" data-seller="482039" data-ad="428684" data-token="8740428b9e28e700f05462d176cd5677d5005d37" >
-							<i class="icon icon-normal-phone"></i>
-							<span id="call-phone428684">
-								Appeler pour le prix							</span>
-						</a>
-						<span style="display:none" id="notif-call-phone428684">
-							<div class='alert alert-info' style='font-size:11px;margin-top:8px;'>Afin de vous garantir les meilleurs échanges avec le vendeur, veuillez lui indiquer que vous avez vu son annonce sur Moteur.ma. <br/> Faites attention ! Veuillez ne  jamais envoyer à un annonceur une avance d'argent lors du processus d'achat d'un véhicule disponible sur la Marketplace. </div>						</span>
-									</div>
-				<div class="meta">
-					<ul class="clearfix"  style="line-height: 17px;">
-						<li>
-							<i class="icon icon-normal-calendar-month"></i>
-							<span class="value_year">
-								2018							</span>
-						</li>
-						<li style="padding: 3.5px 0px;">
-															<i class="icon" style="line-height: 8px;"></i>
-								<img src="https://www.moteur.ma/media/images/other/fuel.png" class="icon-fuel" alt="Carburant" />
-																		<span class="value_fuel">
-											Diesel										</span>
-															</li>
-						<li>
-							<span class="label_km">
-								KM							</span>
-							<span class="value_km">
-								99 000							</span>
 						</li>
 					</ul>
 				</div>
