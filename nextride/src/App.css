@@ -1,0 +1,51 @@
+.App {
+  font-family: Arial, sans-serif;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('/path-to-your-image.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.search-title {
+  color: white;
+  font-size: 80px;
+  font-weight: 900;
+  width: 75%;
+  margin-bottom: 50px;
+}
+
+.search-description {
+  color: #FFDD67;
+  font-weight: 700;
+  width: 30vw;
+  margin-bottom: 50px;
+}
+
+.search-bar {
+  width: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #888;
+  font-size: 14px;
+}
