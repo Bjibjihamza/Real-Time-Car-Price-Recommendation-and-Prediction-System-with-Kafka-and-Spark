@@ -1,5 +1,6 @@
 import React from 'react';
 import icon4 from "../assets/images/icon-4.png"
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 
 
 const Explore = () => {
@@ -23,7 +24,7 @@ const Explore = () => {
             </p>
             
             <button className="btn btn-warning text-white fw-bold w-100 rounded-pill fs-5l"  style={{fontSize :"20px" , padding :"15px" }}  >
-              Predict Price
+            <Link className="nav-link" to="/predict">Predict Price</Link> 
             </button>
           </div>
         </div>

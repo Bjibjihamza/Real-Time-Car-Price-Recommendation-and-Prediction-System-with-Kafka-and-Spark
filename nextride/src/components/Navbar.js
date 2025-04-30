@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AppBar, Toolbar, Typography, Button, IconButton, Box } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { CiHeart } from "react-icons/ci";
 
 function Navbar() {
@@ -26,16 +27,23 @@ function Navbar() {
 
           {/* Desktop Menu */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3  , marginRight:'100px'}}>
-            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px' , fontWeight : '600'}}>Home</Button>
-            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px' , fontWeight : '600' }}>Price Prediction</Button>
-            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px'   , fontWeight : '600'}}>My profile</Button>
-            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px'  , fontWeight : '600' }}>Contact us</Button>
+            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px' , fontWeight : '600'}}><Link className="nav-link" to="/">Home</Link></Button>
+            
+            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px' , fontWeight : '600' }}><Link className="nav-link" to="/predict">Price Prediction</Link>
+            </Button>
+            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px'   , fontWeight : '600'}}>                <Link className="nav-link" to="/profile">My Profile</Link>
+            </Button>
+            <Button sx={{ color: 'white', textTransform: 'none'  , fontSize : '18px'  , fontWeight : '600' }}>                 <Link className="nav-link" to="/"> Contact us</Link>
+            </Button>
           </Box>
+
+                          
+                          
 
           {/* Right Side: Sign in/up and Hamburger */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button sx={{ color: 'white', textTransform: 'none', fontSize : '18px' , fontWeight : '700', display: { xs: 'none', md: 'block' } }}>
-              Sign in
+            <Link to="/login" className='text-decoration-none text-light'>Sign In</Link>
             </Button>
             <Button
               variant="contained"
@@ -53,7 +61,7 @@ function Navbar() {
                 fontWeight : '700'
               }}
             >
-              Sign up
+              <Link to="/signup" className='text-decoration-none  text-light' >Sign Up</Link>
             </Button>
 
             <IconButton

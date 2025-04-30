@@ -1,15 +1,25 @@
-import React from 'react';
-import BgImage from '../assets/images/bg.jpg'; // Assurez-vous que ce chemin est correct
-import car from '../assets/images/bg2.png'; // Assurez-vous que ce chemin est correct
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import BgImage from '../assets/images/bg.jpg'; 
+import car from '../assets/images/bg2.png'; 
 import { CiSearch } from "react-icons/ci";
-import icon1 from "../assets/images/icon-1.png"
-import icon2 from "../assets/images/icon-2.png"
-import icon3 from "../assets/images/icon-3.png"
-
-
+import icon1 from "../assets/images/icon-1.png";
+import icon2 from "../assets/images/icon-2.png";
+import icon3 from "../assets/images/icon-3.png";
 import Navbar from './Navbar';
 
 function Hero() {
+  const [searchTerm, setSearchTerm] = useState(''); // Move useState here
+  const navigate = useNavigate(); // Move useNavigate here
+
+  // Handle search submit
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
   // Style pour l'arrière-plan
   const heroStyle = {
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${BgImage})`,
@@ -74,28 +84,33 @@ function Hero() {
                 width: '100%',
                 display: 'flex',
                 alignItems : 'center'
-   
               }}
             >
-              <input style={{  marginLeft :'10px',width : '50%' , padding :'20px' , borderRadius : '50px' , border : 'none' }} type="text" placeholder="Search ... " className="search-input" />
-              <CiSearch style={{color : 'rgba(0, 0, 0, 0.6)' , width : '50px' ,  fontSize : '30px', position : 'relative' , transform:'translate(-60px)'}} />
-
+              {/* Search form */}
+              <form onSubmit={handleSearchSubmit} className="d-flex position-relative mb-4 w-75">
+                <input
+                  type="text"
+                  className="form-control form-control-lg rounded-pill py-3 ps-4 pe-5"
+                  placeholder="Search by brand, model, or keywords..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="Search cars"
+                />
+                <button className="btn btn-warning rounded-circle position-absolute end-0 top-50 translate-middle-y me-2" 
+                        style={{ width: '50px', height: '50px' }} type="submit">
+                  <CiSearch size={24} />
+                </button>
+              </form>              
             </div>
           </div>
         </div>
       </section>
 
-      <div   className='icons' >
-      <img src={icon1}   style={{position:'absolute' , top:'25vh' , left : '49vw'}}  />
-      <img src={icon2}   style={{position:'absolute' , top:'40vh' , left : '53vw' }} />
-      <img src={icon3}  style={{position:'absolute' , top:'55vh' , left : '49vw'}}  />
-
+      <div className='icons'>
+        <img src={icon1} style={{position:'absolute', top:'25vh', left : '49vw'}} />
+        <img src={icon2} style={{position:'absolute', top:'40vh', left : '53vw'}} />
+        <img src={icon3} style={{position:'absolute', top:'55vh', left : '49vw'}} />
       </div>
-
-
-
-
-
 
       <img src={car} alt="Car" style={carStyle} />
     </section>
