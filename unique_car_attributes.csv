@@ -1,0 +1,296 @@
+Brand,Fuel Type,Transmission,Sector
+subaru,hybride,,Tamensourt
+jaguar,diesel,Manuelle,Bni Ayat
+citroen,essence,Automatique,Nador
+lamborghini,,,Mediouna
+mitsubishi,,,Dcheira
+ford,,,Sidi Bettache
+byd,,,Laghnimyine
+lada,,,Zaïo
+chrysler,,,Inchaden
+audi,,,Youssoufia
+citroën,,,Daoura
+land rover,,,Boujniba
+autres,,,Oulad Frej
+suzuki,,,Ait Ishaq
+infiniti,,,Ribat el Kheir
+simca,,,Ben Guerir
+ferrari,,,Tanger
+changan,,,Taroudant
+foton,,,Missour
+nissan,,,Tan-tan
+isuzu,,,Sidi Bouzid
+geely,,,Kasba Tadla
+cadillac,,,Zeghanghane
+lancia,,,Boukhalef
+hyundai,,,Fquih Ben Saleh
+great-wall,,,Sidi Yahya Zaer
+lifan,,,Ain Leuh
+fiat,,,Ouled Berhil
+maserati,,,Jorf El Melha
+dodge,,,Souk Sebt Ouled Nemma
+gwm motors,,,Tamesna
+volkswagen,,,Errahma
+polaris,,,Drargua
+alfa-romeo,,,Driouch
+autre,,,Moulay Bousselham
+mini,,,Ben ahmed
+bentley,,,Taza
+zotye,,,Azrou
+mg,,,Ratba
+aston-martin,,,Ain Bni Mathar
+mercedes-benz,,,Ouled Teïma
+land-rover,,,Azilal
+tata,,,Guisser
+rolls-royce,,,Dar Bel Amri
+hummer,,,Khemis zemamra
+ds,,,Lakhoualqa
+daihatsu,,,Khenifra
+renault,,,Tnine Aglou
+jeep,,,Sidi Allal Tazi
+lexus,,,Sefrou
+abarth,,,Beni Mellal
+seat,,,Larache
+iveco,,,Méchouar Fès Jdid
+dacia,,,Mers El Kheir
+alfa romeo,,,Gzenaya Al Janoubia
+gaz,,,Nouaceur
+volvo,,,Zemamra
+smart,,,Fnideq
+ssangyong,,,Sabaa Aiyoun
+skoda,,,Mechra bel ksiri
+mazda,,,Aït Iaaza
+peugeot,,,Aoulouz
+chery,,,Ain Cheggag
+faw,,,Tafersit
+chana,,,Berrechid
+hafei,,,Guelmim
+gmc,,,Mirleft
+aston martin,,,Sidi Allal El Bahraoui
+bmw,,,Oulad Fares
+changhe,,,Ain Sbit
+ktm,,,Tamanar
+lincoln,,,Farkhana
+quad,,,Selouane
+chevrolet,,,Aarab Sebbah Ziz
+dfsk,,,Mkansa
+toyota,,,Taourirte
+"""nan""",,,Saka
+cupra,,,Chemaia
+rover,,,Agdz
+daewoo,,,Bni Ansar
+gme,,,Tinejdad
+kia,,,Ait ourir
+honda,,,Ezzhiliga
+opel,,,Settat
+porsche,,,Chefchaouen
+mahindra,,,Ain Harrouda
+,,,Zaida
+,,,Mediek ou mdiq
+,,,Ouezzane
+,,,Meknes
+,,,Had Kourt
+,,,Akka
+,,,Jorf
+,,,Bejaad
+,,,Imouzzer
+,,,Al Aaroui
+,,,Lakhssas
+,,,Mehdia
+,,,Laattaouia
+,,,Oujda
+,,,Bab Berred
+,,,Arfoud
+,,,El Borouj
+,,,Sidi Taibi
+,,,Boulemane
+,,,El Menzeh
+,,,Oulad teïma
+,,,Temara
+,,,Sidi Hajjaj
+,,,Ouled Frej
+,,,Dar Gueddari
+,,,Biougra
+,,,Rissani
+,,,Ain Aouda
+,,,Tiznit
+,,,Tétouan
+,,,Guercif
+,,,Bouznika
+,,,Essaouira
+,,,Sidi Bennour
+,,,Had Bouhssoussen
+,,,Tiflet
+,,,Mechra Bel Ksiri
+,,,Imintanoute
+,,,Dir El Ksiba
+,,,Tafraout
+,,,Boumia
+,,,Azemmour
+,,,Outat El Haj
+,,,Bousselham
+,,,Ain Taoujdate
+,,,Ait Amira
+,,,Skhour Rhamna
+,,,Ouarzazate
+,,,Saidia
+,,,Midelt
+,,,Imzouren
+,,,Tarfaya
+,,,Arbaoua
+,,,Imsouane
+,,,Tahannaout
+,,,Souk El Arbaa
+,,,Agourai
+,,,Dar El Kebdani
+,,,Zemrane
+,,,Benslimane
+,,,Dcheïra El Jihadia
+,,,Ksar el kebir
+,,,Deroua
+,,,Ouazzane
+,,,Alnif
+,,,Harhoura
+,,,Ouislane
+,,,Rabat
+,,,Tissa
+,,,Zaouïat Cheikh
+,,,Bni Tadjite
+,,,Ourika
+,,,Khouribga
+,,,Aourir
+,,,Jemaa Shaim
+,,,Echemmaia
+,,,Tikiouine
+,,,Timoulay
+,,,Foum Oudi
+,,,El Kelaa des Sraghna
+,,,Laayoune
+,,,Imi Ouaddar
+,,,Tahla
+,,,Chichaoua
+,,,Bradia
+,,,Sidi Bibi
+,,,Midar
+,,,Meknassa Al Gharbia
+,,,Jrada
+,,,Lahraouyine
+,,,Bouskoura
+,,,Ifrane Atlas Saghir
+,,,Ain Tizgha
+,,,El Hajeb
+,,,Taounate
+,,,Abaynou
+,,,Had Soualem
+,,,Al Hoceima
+,,,Ain Sfa
+,,,Massa
+,,,El Mansouria
+,,,Naour
+,,,Chtouka
+,,,Marrakech
+,,,Ait Ouribel
+,,,Ifrane
+,,,Khemisset
+,,,Asni
+,,,Foum El Oued
+,,,Touissit
+,,,Inezgane
+,,,Taliouine
+,,,Errachidia
+,,,Beni Malek
+,,,Bouizakarne
+,,,Zaouiat Sidi Kacem
+,,,Rommani
+,,,Ait Ourir
+,,,Sidi Smail
+,,,Assa
+,,,"""NaN"""
+,,,Mallalienne
+,,,Asilah
+,,,Sidi Kacem
+,,,Tinghir
+,,,Sidi Rahal
+,,,Mdiq
+,,,Dar Ould Zidouh
+,,,Hassi Berkane
+,,,Bouarfa
+,,,Sidi Slimane Echcharraa
+,,,Oualidia
+,,,Moulay Driss Zerhoun
+,,,Lqliaa
+,,,Houara Oulad Raho
+,,,Karia Ba Mohamed
+,,,Casablanca
+,,,Other
+,,,Sidi Slimane
+,,,Oulad Said
+,,,Demnate
+,,,Taourirt
+,,,Skhirat
+,,,Sale
+,,,Sidi rahal
+,,,Figuig
+,,,Aguelmous
+,,,El Jadida
+,,,Sidi bou othmane
+,,,Meknassa Acharqia
+,,,Ben Ahmed
+,,,Tata
+,,,Fes
+,,,Martil
+,,,Aklim
+,,,Ahfir
+,,,Mrirt
+,,,Boujdour
+,,,Inzegan
+,,,Ait Melloul
+,,,Tameslohte
+,,,Dar Bouazza
+,,,Sebt Gzoula
+,,,Tamaris
+,,,Bounaamane
+,,,Jerada
+,,,Taznakht
+,,,Cabo Negro
+,,,Ain Attig
+,,,Ouled Ayad
+,,,Sidi Bouknadel
+,,,Aghbalou
+,,,Agadir Melloul
+,,,Goulmima
+,,,El Ksiba
+,,,Dakhla
+,,,Agadir
+,,,Guigou
+,,,Moulay bousselham
+,,,Ain Johra
+,,,Al Oioun Sidi Mellouk
+,,,Bir Jdid
+,,,Khemisset Chaouia
+,,,Tetouan
+,,,Sidi Ifni
+,,,Kenitra
+,,,Mohammedia
+,,,Zagora
+,,,Smara
+,,,Oulad Al Toualaa
+,,,Issaguen
+,,,Unknown
+,,,El Jebha
+,,,Berkane
+,,,Boufkrane
+,,,Sidi Bou Othmane
+,,,Tabant
+,,,Ait Baha
+,,,El Outia
+,,,Oued Zem
+,,,Sidi Yahya El Gharb
+,,,Marchouch
+,,,Tit Mellil
+,,,Targuist
+,,,Foum zguid
+,,,Safi
+,,,Afourar
+,,,Belfaa
+,,,Oulad Salah

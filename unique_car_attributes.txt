@@ -1,0 +1,400 @@
+Unique Car Attributes Extracted from Database
+==================================================
+
+Brands:
+--------------------
+"nan"
+abarth
+alfa romeo
+alfa-romeo
+aston martin
+aston-martin
+audi
+autre
+autres
+bentley
+bmw
+byd
+cadillac
+chana
+changan
+changhe
+chery
+chevrolet
+chrysler
+citroen
+citroën
+cupra
+dacia
+daewoo
+daihatsu
+dfsk
+dodge
+ds
+faw
+ferrari
+fiat
+ford
+foton
+gaz
+geely
+gmc
+gme
+great-wall
+gwm motors
+hafei
+honda
+hummer
+hyundai
+infiniti
+isuzu
+iveco
+jaguar
+jeep
+kia
+ktm
+lada
+lamborghini
+lancia
+land rover
+land-rover
+lexus
+lifan
+lincoln
+mahindra
+maserati
+mazda
+mercedes-benz
+mg
+mini
+mitsubishi
+nissan
+opel
+peugeot
+polaris
+porsche
+quad
+renault
+rolls-royce
+rover
+seat
+simca
+skoda
+smart
+ssangyong
+subaru
+suzuki
+tata
+toyota
+volkswagen
+volvo
+zotye
+
+Fuel Types:
+--------------------
+diesel
+essence
+hybride
+
+Transmissions:
+--------------------
+Automatique
+Manuelle
+
+Sectors:
+--------------------
+"NaN"
+Aarab Sebbah Ziz
+Abaynou
+Afourar
+Agadir
+Agadir Melloul
+Agdz
+Aghbalou
+Agourai
+Aguelmous
+Ahfir
+Ain Aouda
+Ain Attig
+Ain Bni Mathar
+Ain Cheggag
+Ain Harrouda
+Ain Johra
+Ain Leuh
+Ain Sbit
+Ain Sfa
+Ain Taoujdate
+Ain Tizgha
+Ait Amira
+Ait Baha
+Ait Ishaq
+Ait Melloul
+Ait Ouribel
+Ait ourir
+Ait Ourir
+Akka
+Aklim
+Al Aaroui
+Al Hoceima
+Al Oioun Sidi Mellouk
+Alnif
+Aoulouz
+Aourir
+Arbaoua
+Arfoud
+Asilah
+Asni
+Assa
+Azemmour
+Azilal
+Azrou
+Aït Iaaza
+Bab Berred
+Bejaad
+Belfaa
+Ben ahmed
+Ben Ahmed
+Ben Guerir
+Beni Malek
+Beni Mellal
+Benslimane
+Berkane
+Berrechid
+Biougra
+Bir Jdid
+Bni Ansar
+Bni Ayat
+Bni Tadjite
+Bouarfa
+Boufkrane
+Bouizakarne
+Boujdour
+Boujniba
+Boukhalef
+Boulemane
+Boumia
+Bounaamane
+Bouskoura
+Bousselham
+Bouznika
+Bradia
+Cabo Negro
+Casablanca
+Chefchaouen
+Chemaia
+Chichaoua
+Chtouka
+Dakhla
+Daoura
+Dar Bel Amri
+Dar Bouazza
+Dar El Kebdani
+Dar Gueddari
+Dar Ould Zidouh
+Dcheira
+Dcheïra El Jihadia
+Demnate
+Deroua
+Dir El Ksiba
+Drargua
+Driouch
+Echemmaia
+El Borouj
+El Hajeb
+El Jadida
+El Jebha
+El Kelaa des Sraghna
+El Ksiba
+El Mansouria
+El Menzeh
+El Outia
+Errachidia
+Errahma
+Essaouira
+Ezzhiliga
+Farkhana
+Fes
+Figuig
+Fnideq
+Foum El Oued
+Foum Oudi
+Foum zguid
+Fquih Ben Saleh
+Goulmima
+Guelmim
+Guercif
+Guigou
+Guisser
+Gzenaya Al Janoubia
+Had Bouhssoussen
+Had Kourt
+Had Soualem
+Harhoura
+Hassi Berkane
+Houara Oulad Raho
+Ifrane
+Ifrane Atlas Saghir
+Imi Ouaddar
+Imintanoute
+Imouzzer
+Imsouane
+Imzouren
+Inchaden
+Inezgane
+Inzegan
+Issaguen
+Jemaa Shaim
+Jerada
+Jorf
+Jorf El Melha
+Jrada
+Karia Ba Mohamed
+Kasba Tadla
+Kenitra
+Khemis zemamra
+Khemisset
+Khemisset Chaouia
+Khenifra
+Khouribga
+Ksar el kebir
+Laattaouia
+Laayoune
+Laghnimyine
+Lahraouyine
+Lakhoualqa
+Lakhssas
+Larache
+Lqliaa
+Mallalienne
+Marchouch
+Marrakech
+Martil
+Massa
+Mdiq
+Mechra bel ksiri
+Mechra Bel Ksiri
+Mediek ou mdiq
+Mediouna
+Mehdia
+Meknassa Acharqia
+Meknassa Al Gharbia
+Meknes
+Mers El Kheir
+Midar
+Midelt
+Mirleft
+Missour
+Mkansa
+Mohammedia
+Moulay bousselham
+Moulay Bousselham
+Moulay Driss Zerhoun
+Mrirt
+Méchouar Fès Jdid
+Nador
+Naour
+Nouaceur
+Other
+Oualidia
+Ouarzazate
+Ouazzane
+Oued Zem
+Ouezzane
+Ouislane
+Oujda
+Oulad Al Toualaa
+Oulad Fares
+Oulad Frej
+Oulad Said
+Oulad Salah
+Oulad teïma
+Ouled Ayad
+Ouled Berhil
+Ouled Frej
+Ouled Teïma
+Ourika
+Outat El Haj
+Rabat
+Ratba
+Ribat el Kheir
+Rissani
+Rommani
+Sabaa Aiyoun
+Safi
+Saidia
+Saka
+Sale
+Sebt Gzoula
+Sefrou
+Selouane
+Settat
+Sidi Allal El Bahraoui
+Sidi Allal Tazi
+Sidi Bennour
+Sidi Bettache
+Sidi Bibi
+Sidi bou othmane
+Sidi Bou Othmane
+Sidi Bouknadel
+Sidi Bouzid
+Sidi Hajjaj
+Sidi Ifni
+Sidi Kacem
+Sidi Rahal
+Sidi rahal
+Sidi Slimane
+Sidi Slimane Echcharraa
+Sidi Smail
+Sidi Taibi
+Sidi Yahya El Gharb
+Sidi Yahya Zaer
+Skhirat
+Skhour Rhamna
+Smara
+Souk El Arbaa
+Souk Sebt Ouled Nemma
+Tabant
+Tafersit
+Tafraout
+Tahannaout
+Tahla
+Taliouine
+Tamanar
+Tamaris
+Tamensourt
+Tameslohte
+Tamesna
+Tan-tan
+Tanger
+Taounate
+Taourirt
+Taourirte
+Tarfaya
+Targuist
+Taroudant
+Tata
+Taza
+Taznakht
+Temara
+Tetouan
+Tiflet
+Tikiouine
+Timoulay
+Tinejdad
+Tinghir
+Tissa
+Tit Mellil
+Tiznit
+Tnine Aglou
+Touissit
+Tétouan
+Unknown
+Youssoufia
+Zagora
+Zaida
+Zaouiat Sidi Kacem
+Zaouïat Cheikh
+Zaïo
+Zeghanghane
+Zemamra
+Zemrane

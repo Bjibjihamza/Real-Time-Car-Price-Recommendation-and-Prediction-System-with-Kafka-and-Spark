@@ -1,5 +1,6 @@
 import logging
 import random
+import bcrypt
 from uuid import uuid4
 from faker import Faker
 from datetime import datetime, UTC
@@ -16,6 +17,9 @@ fake = Faker()
 # Cassandra configuration
 CASSANDRA_HOST = ['localhost']  # Adjust to your Cassandra host
 CASSANDRA_KEYSPACE = 'cars_keyspace'
+
+# Fixed password for all users
+FIXED_PASSWORD = "47534753"
 
 # Connect to Cassandra
 try:
@@ -45,12 +49,16 @@ except Exception as e:
     cities = ['Casablanca', 'Rabat', 'Marrakech', 'Fes', 'Tanger', 'Agadir', 'Oujda']
     logger.info("Using default cities")
 
-# Function to generate a synthetic user
+# Function to generate a synthetic user with hashed password
 def generate_user():
+    # Hash the fixed password using bcrypt
+    hashed_password = bcrypt.hashpw(FIXED_PASSWORD.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
     user = {
         'user_id': uuid4(),
         'username': fake.user_name(),
         'email': fake.email(),
+        'password': hashed_password,  # Store hashed password
         'age': random.randint(18, 65),
         'location': random.choice(cities),
         'created_at': datetime.now(UTC)
@@ -61,13 +69,14 @@ def generate_user():
 def insert_user(user):
     try:
         query = """
-            INSERT INTO users (user_id, username, email, age, location, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO users (user_id, username, email, password, age, location, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         session.execute(query, (
             user['user_id'],
             user['username'],
             user['email'],
+            user['password'],
             user['age'],
             user['location'],
             user['created_at']

@@ -1,7 +1,7 @@
-// LoginPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaCar } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +10,7 @@ const LoginPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,23 +27,14 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // In a real application, this would be an API call to your backend
-      setTimeout(() => {
-        // Mock successful login
-        const mockUser = {
-          user_id: '550e8400-e29b-41d4-a716-446655440000',
-          username: 'test_user',
-          email: formData.email,
-        };
-        
-        // Store user in localStorage or context
-        localStorage.setItem('carUser', JSON.stringify(mockUser));
-        
-        setLoading(false);
-        navigate('/');
-      }, 1000);
+      await login({
+        email: formData.email,
+        password: formData.password,
+      });
+      setLoading(false);
+      navigate('/profile');
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
+      setError(err.response?.data?.message || 'Error signing in. Please try again.');
       setLoading(false);
     }
   };
@@ -90,7 +82,7 @@ const LoginPage = () => {
                 <div className="mb-4">
                   <div className="d-flex justify-content-between align-items-center">
                     <label htmlFor="password" className="form-label">Password</label>
-                    <Link to="/forgot-password" className="text-decoration-none small" style={{ color: "#BC7328" }}>
+                    <Link to="/forgot-password" className="text-decoration-none small" style={{ color: '#BC7328' }}>
                       Forgot Password?
                     </Link>
                   </div>
@@ -130,7 +122,10 @@ const LoginPage = () => {
 
                 <div className="text-center">
                   <p className="mb-0">
-                    Don't have an account? <Link to="/signup" className="text-decoration-none" style={{ color: "#BC7328" }}><strong>Sign Up</strong></Link>
+                    Don't have an account?{' '}
+                    <Link to="/signup" className="text-decoration-none" style={{ color: '#BC7328' }}>
+                      <strong>Sign Up</strong>
+                    </Link>
                   </p>
                 </div>
               </form>

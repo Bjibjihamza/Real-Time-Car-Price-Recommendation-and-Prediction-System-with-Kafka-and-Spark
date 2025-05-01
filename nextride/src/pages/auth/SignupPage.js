@@ -1,7 +1,7 @@
-// SignupPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaCar, FaEnvelope, FaMapMarkerAlt, FaBirthdayCake } from 'react-icons/fa';
+import axios from 'axios';
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -64,7 +64,8 @@ const SignupPage = () => {
     }
   };
 
-  const nextStep = () => {
+  const nextStep = (e) => {
+    e.preventDefault(); // Prevent form submission
     if (step === 1) {
       // Validate first step
       if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
@@ -73,6 +74,10 @@ const SignupPage = () => {
       }
       if (formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
+        return;
+      }
+      if (formData.password.length < 8) {
+        setError('Password must be at least 8 characters');
         return;
       }
     }
@@ -89,43 +94,50 @@ const SignupPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+  
     try {
-      // In a real application, this would be an API call to your backend
-      setTimeout(() => {
-        // Generate UUID for user (in a real app, this would come from the backend)
-        const mockUser = {
-          user_id: '550e8400-e29b-41d4-a716-446655440000',
-          username: formData.username,
-          email: formData.email,
-          age: parseInt(formData.age),
-          location: formData.location,
-          created_at: new Date().toISOString(),
-        };
-        
-        // User preferences would also be stored in the database
-        const userPreferences = {
-          user_id: mockUser.user_id,
-          preferred_brands: formData.preferredBrands,
-          preferred_fuel_types: formData.preferredFuelTypes,
-          preferred_transmissions: formData.preferredTransmissions,
-          budget_min: parseInt(formData.budgetMin) || 0,
-          budget_max: parseInt(formData.budgetMax) || 0,
-          last_updated: new Date().toISOString(),
-        };
-        
-        // Store user in localStorage or context
-        localStorage.setItem('carUser', JSON.stringify(mockUser));
-        localStorage.setItem('carUserPreferences', JSON.stringify(userPreferences));
-        
-        setLoading(false);
-        navigate('/');
-      }, 1500);
+      // Step 1: Register the user
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        age: formData.age ? parseInt(formData.age) : null,
+        location: formData.location || null,
+      };
+  
+      const registerResponse = await axios.post('http://localhost:5000/api/auth/register', userData);
+      const { user } = registerResponse.data;
+  
+      // Step 2: Store user preferences
+      const preferencesData = {
+        userId: user.id, // Send userId in the body
+        budget_min: formData.budgetMin ? parseInt(formData.budgetMin) : 0,
+        budget_max: formData.budgetMax ? parseInt(formData.budgetMax) : 0,
+        mileage_min: 0, // Not collected in the form, set to 0
+        mileage_max: 0, // Not collected in the form, set to 0
+        preferred_brands: formData.preferredBrands,
+        preferred_fuel_types: formData.preferredFuelTypes,
+        preferred_transmissions: formData.preferredTransmissions,
+        preferred_years: [], // Not collected in the form
+        preferred_door_count: [], // Not collected in the form
+      };
+  
+      await axios.put('http://localhost:5000/api/users/preferences', preferencesData);
+  
+      // Step 3: Store user and preferences in localStorage for session management
+      localStorage.setItem('carUser', JSON.stringify(user));
+      localStorage.setItem('carUserPreferences', JSON.stringify(preferencesData));
+  
+      setLoading(false);
+      navigate('/');
     } catch (err) {
-      setError('Error creating account. Please try again.');
+      setError(err.response?.data?.message || 'Error creating account. Please try again.');
       setLoading(false);
     }
   };
+
+
+
 
   return (
     <div className="container py-5">
@@ -400,12 +412,12 @@ const SignupPage = () => {
                   
                   {step < 2 ? (
                     <button
-                      type="button"
-                      className="btn btn-warning px-4 rounded-pill ms-auto"
-                      onClick={nextStep}
-                    >
-                      Next
-                    </button>
+  type="button"
+  className="btn btn-warning px-4 rounded-pill ms-auto"
+  onClick={nextStep} // This already passes the event
+>
+  Next
+</button>
                   ) : (
                     <button
                       type="submit"
