@@ -16,6 +16,29 @@ function VehicleSection() {
   const [isLoading, setIsLoading] = useState(false);
   const limit = 8;
 
+  const BASE_URL = 'http://localhost:5000';
+
+  const constructImageUrl = useCallback((vehicle) => {
+    console.log('Constructing image URL for vehicle:', vehicle);
+    if (vehicle.image_url && vehicle.image_url.startsWith('http')) {
+      return vehicle.image_url;
+    }
+    if (vehicle.image && vehicle.image.startsWith('http')) {
+      return vehicle.image;
+    }
+    // Use image_folder directly from the database
+    const folderName = vehicle.image_folder || 
+      (vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim()).toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, '_')
+        .replace(/\s+/g, '_');
+    if (!vehicle.image_folder) {
+      console.warn(`No image_folder found for vehicle "${vehicle.title || `${vehicle.brand} ${vehicle.model}`}", using fallback folder: ${folderName}`);
+    }
+    const imagePath = `/images/cars/${folderName}/image_1.jpg`;
+    console.log('Constructed image path:', imagePath);
+    return `${BASE_URL}${imagePath}`;
+  }, [BASE_URL]);
+
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -23,7 +46,12 @@ function VehicleSection() {
       const config = user?.token ? { headers: { Authorization: `Bearer ${user.token}` } } : {};
 
       const allCarsResponse = await axios.get(`http://localhost:5000/api/cars?page=${page}&limit=${limit}`, config);
-      setVehicles(allCarsResponse.data.cars || []);
+      const allCars = (allCarsResponse.data.cars || []).map(vehicle => ({
+        ...vehicle,
+        imageSrc: constructImageUrl(vehicle),
+        title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
+      }));
+      setVehicles(allCars);
       setTotalPages(Math.ceil(allCarsResponse.data.total / limit) || 1);
 
       if (user) {
@@ -31,22 +59,38 @@ function VehicleSection() {
           axios.get('http://localhost:5000/api/users/recommendations', config),
           axios.get('http://localhost:5000/api/users/favorites', config),
         ]);
-        setRecommendedVehicles(recommendedResponse.data.cars || []);
-        setFavorites(favoritesResponse.data.cars || []);
+        const recommended = (recommendedResponse.data.cars || []).map(vehicle => ({
+          ...vehicle,
+          imageSrc: constructImageUrl(vehicle),
+          title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
+        }));
+        const favoriteCars = (favoritesResponse.data.cars || []).map(vehicle => ({
+          ...vehicle,
+          imageSrc: constructImageUrl(vehicle),
+          title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
+        }));
+        setRecommendedVehicles(recommended);
+        setFavorites(favoriteCars);
+      } else {
+        setRecommendedVehicles([]);
+        setFavorites([]);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error.response?.data || error.message);
       setError('Failed to load vehicles. Please try again later.');
+      setVehicles([]);
+      setRecommendedVehicles([]);
+      setFavorites([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
-  }, [user, page]);
+  }, [user, page, constructImageUrl]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Create a Set of favorite IDs for efficient lookup
   const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
 
   const handleSaveToggle = useCallback(
@@ -89,7 +133,6 @@ function VehicleSection() {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
-      // Scroll to the top of the section instead of the entire page
       const section = document.querySelector('.container');
       if (section) {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -112,7 +155,6 @@ function VehicleSection() {
 
   return (
     <section className="container py-5" style={{ maxWidth: '1400px' }}>
-      {/* Error Message */}
       {error && (
         <div
           className="alert d-flex align-items-center mb-5"
@@ -130,7 +172,6 @@ function VehicleSection() {
         </div>
       )}
 
-      {/* Header and Tabs */}
       <div className="mb-5">
         <h1
           className="fw-bold mb-4"
@@ -208,7 +249,6 @@ function VehicleSection() {
         </div>
       </div>
 
-      {/* Vehicle Grid or Loading/No Results */}
       {isLoading ? (
         <div
           className="col-12 text-center py-5"
@@ -250,11 +290,11 @@ function VehicleSection() {
                 key={vehicle.id}
                 vehicle={{
                   id: vehicle.id,
-                  name: vehicle.title || `${vehicle.brand} ${vehicle.model}`,
+                  name: vehicle.title,
                   specs: `${vehicle.fuel_type || ''} ${vehicle.transmission || ''}`.trim(),
                   price: vehicle.price ? `${vehicle.price.toLocaleString()} MAD` : 'Price on request',
                   isNew,
-                  image_url: vehicle.image_url,
+                  imageSrc: vehicle.imageSrc,
                 }}
                 isSaved={favoriteIds.has(vehicle.id)}
                 onSaveToggle={handleSaveToggle}
@@ -292,7 +332,6 @@ function VehicleSection() {
         </div>
       )}
 
-      {/* Pagination */}
       {activeTab === 'all' && totalPages > 1 && (
         <div className="d-flex justify-content-center mt-5">
           <nav aria-label="Page navigation">
@@ -385,7 +424,6 @@ function VehicleSection() {
         </div>
       )}
 
-      {/* Scroll Indicator */}
       {activeTab === 'all' && page < totalPages && (
         <div
           className="d-flex justify-content-center mt-5"

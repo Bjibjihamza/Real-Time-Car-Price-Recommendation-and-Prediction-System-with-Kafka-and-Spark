@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { FaArrowRight, FaCarSide, FaCog, FaRegLightbulb } from 'react-icons/fa';
 import { MdCompareArrows } from 'react-icons/md';
-import { SiLightningdesignservice } from 'react-icons/si';
 
 const PredictionPage = () => {
-  const [selectedModel, setSelectedModel] = useState('lightgbm');
-  const [formData, setFormData] = useState({
-    brand: '',
-    model: '',
-    condition: '',
-    year: '',
-    mileage: '',
-    fuel_type: '',
-    transmission: '',
-    fiscal_power: '',
-    door_count: '',
-    first_owner: false,
-    origin: '',
-    seller_city: '',
-  });
-  const [equipment, setEquipment] = useState({
+  const location = useLocation();
+  const car = location.state?.car || {};
+
+  // Initialize formData with car data
+  const initialFormData = {
+    brand: car.brand ? car.brand.toLowerCase() : '',
+    model: car.model || '',
+    condition: car.condition ? car.condition.toLowerCase() : '',
+    year: car.year ? String(car.year) : '',
+    mileage: car.mileage ? String(car.mileage) : '',
+    fuel_type: car.fuel_type ? car.fuel_type.toLowerCase() : '',
+    transmission: car.transmission ? car.transmission.toLowerCase() : '',
+    fiscal_power: car.fiscal_power ? String(car.fiscal_power) : '',
+    door_count: car.door_count ? String(car.door_count) : '',
+    first_owner: car.first_owner === 'Yes',
+    origin: car.origin ? car.origin.toLowerCase() : '',
+    seller_city: car.seller_city || '',
+  };
+
+  // Initialize equipment based on car's equipment
+  const initialEquipment = {
     jantes_aluminium: false,
     alarme: false,
     airbags: false,
@@ -33,7 +38,22 @@ const PredictionPage = () => {
     radar_recul: false,
     gps: false,
     verrouillage_centralise: false,
-  });
+  };
+
+  // Parse the car's equipment string and set the corresponding checkboxes
+  if (car.equipment) {
+    const equipmentList = car.equipment.toLowerCase().split(', ').map(item => item.trim());
+    equipmentList.forEach(item => {
+      const key = item.replace(/\s+/g, '_');
+      if (key in initialEquipment) {
+        initialEquipment[key] = true;
+      }
+    });
+  }
+
+  const [selectedModel, setSelectedModel] = useState('lightgbm');
+  const [formData, setFormData] = useState(initialFormData);
+  const [equipment, setEquipment] = useState(initialEquipment);
   const [predictedPrice, setPredictedPrice] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -90,7 +110,7 @@ const PredictionPage = () => {
 
     // Simulate API call with timeout
     setTimeout(() => {
-      // Mock response based on the model - in production this would be an actual API call
+      // Mock response based on the model
       const mockPriceCalculation = () => {
         const basePrice = 100000;
         const yearFactor = parseInt(formData.year, 10) * 2000;
@@ -359,10 +379,10 @@ const PredictionPage = () => {
                       onChange={handleInputChange}
                     >
                       <option value="">Select origin</option>
-                      <option value="WW au Maroc">WW au Maroc</option>
-                      <option value="Importé neuf">Importé neuf</option>
-                      <option value="Importé occasion">Importé occasion</option>
-                      <option value="Dédouané">Dédouané</option>
+                      <option value="ww au maroc">WW au Maroc</option>
+                      <option value="importé neuf">Importé neuf</option>
+                      <option value="importé occasion">Importé occasion</option>
+                      <option value="dédouané">Dédouané</option>
                     </select>
                   </div>
                   
@@ -697,6 +717,7 @@ const PredictionPage = () => {
               <div className="card-body p-4">
                 <div className="d-flex align-items-center mb-4">
                   <div className="bg-warning p-2 rounded-circle me-3">
+                    <FaArrowRight className="text-white" />
                   </div>
                   <div>
                     <h5 className="fw-bold mb-0">Get Recommendations</h5>

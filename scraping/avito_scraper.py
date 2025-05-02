@@ -12,7 +12,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-
+import secrets
+import string
 # Add Kafka imports
 try:
     from kafka import KafkaProducer
@@ -123,15 +124,11 @@ def convert_relative_date(relative_date):
 
 
 def create_folder_name(title, idx):
-    """Crée un nom de dossier valide pour stocker les images d'une annonce."""
-    # Nettoyer le titre pour obtenir un nom de dossier valide
-    folder_name = re.sub(r'[^\w\s-]', '', title)  # Supprimer les caractères non alphanumériques
-    folder_name = re.sub(r'\s+', '_', folder_name)  # Remplacer les espaces par des underscores
-    folder_name = folder_name[:50]  # Limiter la longueur
-    
-    # Ajouter l'ID pour garantir l'unicité
-    folder_name = f"{idx}_{folder_name}"
-    
+    """Crée un nom de dossier court, aléatoire et valide sans accents ni caractères spéciaux."""
+    # Générer une chaîne aléatoire de 12 caractères (lettres a-z et chiffres 0-9)
+    random_part = ''.join(secrets.choice(string.ascii_lowercase + string.digits) for _ in range(12))
+    # Ajouter l'index pour garantir l'unicité
+    folder_name = f"{random_part}_{idx}"
     return folder_name
 
 

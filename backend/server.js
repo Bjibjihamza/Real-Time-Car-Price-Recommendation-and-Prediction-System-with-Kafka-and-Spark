@@ -3,6 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
+const path = require('path');
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const carRoutes = require('./routes/carRoutes');
@@ -28,12 +30,15 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/prediction', predictionRoutes);
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 
 // Basic route for testing
 app.get('/', (req, res) => {

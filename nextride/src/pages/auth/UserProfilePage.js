@@ -75,6 +75,29 @@ const UserProfilePage = () => {
   const fuelMap = Object.fromEntries(fuelTypes.map(f => [f.toLowerCase(), f]));
   const transmissionMap = Object.fromEntries(transmissions.map(t => [t.toLowerCase(), t]));
 
+  const DEFAULT_IMAGE = '/images/cars/default/image_1.jpg';
+  const PLACEHOLDER_IMAGE = '/images/cars/placeholder.jpg'; // Add a placeholder image in public/images/cars/
+  const BASE_URL = 'http://localhost:5000'; // Backend port
+
+
+  // Construct image URL based on car data
+  const constructImageUrl = (car) => {
+    console.log('Constructing image URL for car:', car);
+    if (car.image_url && car.image_url.startsWith('http')) {
+      return car.image_url;
+    }
+    if (car.image && car.image.startsWith('http')) {
+      return car.image;
+    }
+    const folderName = car.image_folder ||
+      (car.title || `${car.brand || ''} ${car.model || ''}`.trim()).toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, '_')
+        .replace(/\s+/g, '_');
+    const imagePath = `/images/cars/${folderName}/image_1.jpg`;
+    console.log('Constructed image path:', imagePath);
+    return `${BASE_URL}${imagePath}`;
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
@@ -137,13 +160,28 @@ const UserProfilePage = () => {
 
         setPreferences(normalizedPreferences);
         setPreferencesData(normalizedPreferences);
-        console.log('Normalized preferencesData:', normalizedPreferences);
-
         const favoritesResponse = await axios.get('http://localhost:5000/api/users/favorites', config);
-        setFavorites(favoritesResponse.data.cars || []);
+        const favoritesData = favoritesResponse.data.cars || [];
+        console.log('Favorites Response:', favoritesData); // This is already in your code
+        setFavorites(favoritesData.map(car => {
+          console.log('Mapping car:', car); // Add this to debug each car object
+          return {
+            ...car,
+            id: car.id || car.car_id,
+            imageSrc: constructImageUrl(car),
+            title: car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car',
+          };
+        }));
 
         const recommendationsResponse = await axios.get('http://localhost:5000/api/users/recommendations', config);
-        setRecommendations(recommendationsResponse.data.cars || []);
+        const recommendationsData = recommendationsResponse.data.cars || [];
+        console.log('Recommendations Response:', recommendationsData);
+        setRecommendations(recommendationsData.map(car => ({
+          ...car,
+          car_id: car.car_id || car.id,
+          imageSrc: constructImageUrl(car),
+          name: car.name || car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car',
+        })));
       } catch (error) {
         console.error('Error fetching user data or preferences:', error);
         if (error.response) {
@@ -311,6 +349,82 @@ const UserProfilePage = () => {
     );
   }
 
+  // Component to render a car card with image handling
+  const CarCard = ({ car, isFavorite, onSaveToggle, onDismiss }) => {
+    const [imageSrc, setImageSrc] = useState(car.imageSrc || PLACEHOLDER_IMAGE);
+
+    const handleImageError = (e) => {
+      const currentSrc = e.target.src;
+      if (currentSrc !== `${BASE_URL}${DEFAULT_IMAGE}` && currentSrc !== `${BASE_URL}${PLACEHOLDER_IMAGE}`) {
+        console.warn(`Image failed for car ${car.id || car.car_id}: ${currentSrc}, falling back to default`);
+        setImageSrc(DEFAULT_IMAGE);
+      } else if (currentSrc !== `${BASE_URL}${PLACEHOLDER_IMAGE}`) {
+        console.warn(`Default image failed for car ${car.id || car.car_id}: ${currentSrc}, falling back to placeholder`);
+        setImageSrc(PLACEHOLDER_IMAGE);
+      }
+    };
+
+    console.log('Rendering CarCard for:', car); // Debug
+    return (
+      <div className="col">
+        <div className="card h-100 border-0 shadow-sm">
+          <div className="row g-0">
+            <div className="col-4">
+              <img
+                src={imageSrc}
+                className="img-fluid rounded-start h-100"
+                alt={car.title || car.name}
+                style={{ objectFit: 'cover' }}
+                loading="lazy"
+                onError={handleImageError}
+                onLoad={() => console.log(`Image loaded for car ${car.id || car.car_id}: ${imageSrc}`)}
+              />
+            </div>
+            <div className="col-8">
+              <div className="card-body">
+                <div className="d-flex justify-content-between">
+                  <h5 className="card-title">{car.title || car.name}</h5>
+                  {isFavorite && (
+                    <button
+                      className="btn btn-sm text-danger"
+                      onClick={() => onSaveToggle(car.id)}
+                    >
+                      <FaHeart size={16} />
+                    </button>
+                  )}
+                </div>
+                <p className="card-text text-warning fw-bold">
+                  {car.price ? `${car.price.toLocaleString()} MAD` : 'Price not available'}
+                </p>
+                <div className="mt-2 d-flex gap-2">
+                  <Link to={`/car/${car.id || car.car_id}`} className="btn btn-sm btn-warning">
+                    View Details
+                  </Link>
+                  {!isFavorite && (
+                    <button
+                      className="btn btn-sm btn-outline-warning"
+                      onClick={() => onSaveToggle(car.car_id, true)}
+                    >
+                      <FaHeart className="me-1" /> Save
+                    </button>
+                  )}
+                  {onDismiss && (
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => onDismiss(car.car_id)}
+                    >
+                      <FaTimes className="me-1" /> Not Interested
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="container py-5">
       {error && (
@@ -338,7 +452,7 @@ const UserProfilePage = () => {
                   <FaUser className="me-3" /> Profile Information
                 </button>
                 <button
-                  className={`list-group-item list SIST-group-item-action d-flex align-items-center ${activeTab === 'preferences' ? 'active bg-warning text-white' : ''}`}
+                  className={`list-group-item list-group-item-action d-flex align-items-center ${activeTab === 'preferences' ? 'active bg-warning text-white' : ''}`}
                   onClick={() => handleTabChange('preferences', preferencesRef)}
                 >
                   <FaCar className="me-3" /> Car Preferences
@@ -857,47 +971,23 @@ const UserProfilePage = () => {
                     {favorites.length > 0 ? (
                       <div className="row row-cols-1 row-cols-md-2 g-4">
                         {favorites.map(car => (
-                          <div key={car.id} className="col">
-                            <div className="card h-100 border-0 shadow-sm">
-                              <div className="row g-0">
-                                <div className="col-4">
-                                  <img src={car.image || 'https://via.placeholder.com/150'} className="img-fluid rounded-start h-100" alt={car.title} style={{ objectFit: 'cover' }} />
-                                </div>
-                                <div className="col-8">
-                                  <div className="card-body">
-                                    <div className="d-flex justify-content-between">
-                                      <h5 className="card-title">{car.title}</h5>
-                                      <button
-  className="btn btn-sm text-danger"
-  onClick={async () => {
-    try {
-      if (!car.id) {
-        setError('Invalid car data.');
-        return;
-      }
-      await axios.delete('http://localhost:5000/api/users/favorites', {
-        headers: { Authorization: `Bearer ${user.token}` },
-        data: { userId: user.userId, carId: car.id }
-      });
-      setFavorites(favorites.filter(f => f.id !== car.id));
-      setSnackbar({ open: true, message: 'Car removed from favorites!', severity: 'success' });
-    } catch (error) {
-      setError(error.response?.data?.message || 'Failed to remove favorite.');
-    }
-  }}
->
-  <FaHeart size={16} />
-</button>
-                                    </div>
-                                    <p className="card-text text-warning fw-bold">{car.price ? `${car.price.toLocaleString()} MAD` : 'Price not available'}</p>
-                                    <div className="mt-2">
-                                      <Link to={`/car/${car.id}`} className="btn btn-sm btn-warning me-2">View Details</Link>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <CarCard
+                            key={car.id}
+                            car={car}
+                            isFavorite
+                            onSaveToggle={async (carId) => {
+                              try {
+                                await axios.delete('http://localhost:5000/api/users/favorites', {
+                                  headers: { Authorization: `Bearer ${user.token}` },
+                                  data: { userId: user.userId, carId }
+                                });
+                                setFavorites(favorites.filter(f => f.id !== carId));
+                                setSnackbar({ open: true, message: 'Car removed from favorites!', severity: 'success' });
+                              } catch (error) {
+                                setError(error.response?.data?.message || 'Failed to remove favorite.');
+                              }
+                            }}
+                          />
                         ))}
                       </div>
                     ) : (
@@ -932,82 +1022,46 @@ const UserProfilePage = () => {
                     {recommendations.length > 0 ? (
                       <div className="row row-cols-1 g-4">
                         {recommendations.map(car => (
-                          <div key={car.car_id} className="col">
-                            <div className="card border-0 shadow-sm">
-                              <div className="row g-0">
-                                <div className="col-md-3">
-                                  <img src={car.image || 'https://via.placeholder.com/150'} className="img-fluid rounded-start h-100" alt={car.name} style={{ objectFit: 'cover' }} />
-                                </div>
-                                <div className="col-md-9">
-                                  <div className="card-body">
-                                    <div className="d-flex justify-content-between align-items-start">
-                                      <div>
-                                        <h5 className="card-title">{car.name}</h5>
-                                        <p className="card-text text-warning fw-bold">{car.price ? `${car.price.toLocaleString()} MAD` : 'Price not available'}</p>
-                                      </div>
-                                      <span className="badge bg-success rounded-pill px-3 py-2">
-                                        Match: {car.recommendation_score ? `${car.recommendation_score}%` : 'N/A'}
-                                      </span>
-                                    </div>
-                                    <p className="card-text">
-                                      <small className="text-muted">
-                                        {car.recommendation_reason || 'Based on your preferences'}
-                                      </small>
-                                    </p>
-                                    <div className="mt-3 d-flex">
-                                      <Link to={`/car/${car.car_id}`} className="btn btn-sm btn-warning me-2">View Details</Link>
-                                      <button
-                                        className="btn btn-sm btn-outline-warning me-2"
-                                        onClick={async () => {
-                                          try {
-                                            await axios.post('http://localhost:5000/api/users/favorites', {
-                                              carId: car.car_id
-                                            }, {
-                                              headers: { Authorization: `Bearer ${user.token}` }
-                                            });
-                                            setFavorites([...favorites, car]);
-                                            setSnackbar({
-                                              open: true,
-                                              message: 'Car added to favorites!',
-                                              severity: 'success',
-                                            });
-                                          } catch (error) {
-                                            console.error('Error adding favorite:', error);
-                                            setError('Failed to add car to favorites.');
-                                          }
-                                        }}
-                                      >
-                                        <FaHeart className="me-1" /> Save
-                                      </button>
-                                      <button
-                                        className="btn btn-sm btn-outline-danger"
-                                        onClick={async () => {
-                                          try {
-                                            await axios.post('http://localhost:5000/api/users/recommendations/dismiss', {
-                                              carId: car.car_id
-                                            }, {
-                                              headers: { Authorization: `Bearer ${user.token}` }
-                                            });
-                                            setRecommendations(recommendations.filter(r => r.car_id !== car.car_id));
-                                            setSnackbar({
-                                              open: true,
-                                              message: 'Recommendation dismissed!',
-                                              severity: 'success',
-                                            });
-                                          } catch (error) {
-                                            console.error('Error dismissing recommendation:', error);
-                                            setError('Failed to dismiss recommendation.');
-                                          }
-                                        }}
-                                      >
-                                        <FaTimes className="me-1" /> Not Interested
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <CarCard
+                            key={car.car_id}
+                            car={car}
+                            isFavorite={false}
+                            onSaveToggle={async (carId, shouldSave) => {
+                              try {
+                                await axios.post('http://localhost:5000/api/users/favorites', {
+                                  carId
+                                }, {
+                                  headers: { Authorization: `Bearer ${user.token}` }
+                                });
+                                setFavorites([...favorites, car]);
+                                setSnackbar({
+                                  open: true,
+                                  message: 'Car added to favorites!',
+                                  severity: 'success',
+                                });
+                              } catch (error) {
+                                setError('Failed to add car to favorites.');
+                              }
+                            }}
+                            onDismiss={async (carId) => {
+                              try {
+                                await axios.post('http://localhost:5000/api/users/recommendations/dismiss', {
+                                  carId
+                                }, {
+                                  headers: { Authorization: `Bearer ${user.token}` }
+                                });
+                                setRecommendations(recommendations.filter(r => r.car_id !== carId));
+                                setSnackbar({
+                                  open: true,
+                                  message: 'Recommendation dismissed!',
+                                  severity: 'success',
+                                });
+                              } catch (error) {
+                                console.error('Dismiss error:', error);
+                                setError('Failed to dismiss recommendation. Endpoint may be missing.');
+                              }
+                            }}
+                          />
                         ))}
                       </div>
                     ) : (

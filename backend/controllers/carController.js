@@ -80,13 +80,39 @@ exports.getRecentlyViewed = async (req, res) => {
     res.status(500).json({ message: 'Error fetching recently viewed cars' });
   }
 };
+const { types } = require('cassandra-driver');
+const client = require('../config/db');
+const { validate: isUUID } = require('uuid');
 
-// Record a car view
 exports.recordCarView = async (req, res) => {
   try {
-    const { userId, carId } = req.body;
-    if (!userId || !carId) return res.status(400).json({ message: 'User ID and Car ID are required' });
-    if (!isUUID(userId) || !isUUID(carId)) return res.status(400).json({ message: 'Invalid ID format' });
+    const { userId, carId, viewSource } = req.body;
+    console.log('Request body:', req.body);
+
+    // Validate inputs
+    if (!userId || !carId || !viewSource) {
+      console.error('Missing required fields:', { userId, carId, viewSource });
+      return res.status(400).json({ message: 'User ID, Car ID, and View Source are required' });
+    }
+
+    if (!isUUID(userId) || !isUUID(carId)) {
+      console.error('Invalid UUID format:', { userId, carId });
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+
+    const userUuid = types.Uuid.fromString(userId);
+    const carUuid = types.Uuid.fromString(carId);
+    const currentDate = new Date();
+
+    // Log parameter types for debugging
+    console.log('Parameter types:', {
+      userUuid: typeof userUuid,
+      viewDate: typeof currentDate.toISOString().split('T')[0],
+      viewTimestamp: typeof currentDate,
+      carUuid: typeof carUuid,
+      viewDuration: typeof 30,
+      viewSource: typeof viewSource,
+    });
 
     const query = `
       INSERT INTO car_views_by_user (
@@ -94,19 +120,25 @@ exports.recordCarView = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?)
     `;
     const params = [
-      userId,
-      new Date().toISOString().split('T')[0],
-      new Date(),
-      carId,
-      30, // Example duration
-      'web' // Example source
+      userUuid, // user_id (uuid)
+      currentDate.toISOString().split('T')[0], // view_date (text)
+      currentDate, // view_timestamp (timestamp)
+      carUuid, // car_id (uuid)
+      30, // view_duration_seconds (int)
+      viewSource, // view_source (text)
     ];
+
+    console.log('Executing query with params:', params.map(p => typeof p)); // Debug param types
+
+    if (!client) {
+      throw new Error('Cassandra client not initialized');
+    }
 
     await client.execute(query, params, { prepare: true });
     res.status(200).json({ message: 'Car view recorded' });
   } catch (error) {
-    console.error('Error recording car view:', error);
-    res.status(500).json({ message: 'Error recording car view' });
+    console.error('Error recording car view:', error.message, error.stack);
+    res.status(500).json({ message: 'Error recording car view', error: error.message });
   }
 };
 

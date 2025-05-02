@@ -8,11 +8,12 @@ import { useAuth } from '../context/AuthContext';
 
 const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
   const { user } = useAuth();
-  const defaultImage = '/images/cars/default/image_1.jpg';
-  const [imageSrc, setImageSrc] = useState(vehicle.image_url || defaultImage);
+  const BASE_URL = 'http://localhost:5000';
+  const DEFAULT_IMAGE = `${BASE_URL}/images/cars/default/image_1.jpg`;
+  const PLACEHOLDER_IMAGE = `${BASE_URL}/images/cars/placeholder.jpg`; // Ensure this exists
+  const [imageSrc, setImageSrc] = useState(vehicle.imageSrc || DEFAULT_IMAGE);
   const [shouldRender, setShouldRender] = useState(true);
 
-  // Handle view details API call
   const handleViewDetails = async () => {
     if (user) {
       try {
@@ -31,25 +32,25 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
     }
   };
 
-  // Handle image load errors
   const handleImageError = (e) => {
     const currentSrc = e.target.src;
-    if (currentSrc !== `${window.location.origin}${defaultImage}`) {
+    if (currentSrc !== DEFAULT_IMAGE && currentSrc !== PLACEHOLDER_IMAGE) {
       console.warn(`Image failed for vehicle ${vehicle.id}: ${currentSrc}, falling back to default`);
-      setImageSrc(defaultImage);
+      setImageSrc(DEFAULT_IMAGE);
+    } else if (currentSrc !== PLACEHOLDER_IMAGE) {
+      console.warn(`Default image failed for vehicle ${vehicle.id}: ${currentSrc}, falling back to placeholder`);
+      setImageSrc(PLACEHOLDER_IMAGE);
     } else {
-      console.error(`Default image failed for vehicle ${vehicle.id}: ${currentSrc}`);
-      setShouldRender(false); // Do not render the card if default image fails
+      console.error(`Placeholder image failed for vehicle ${vehicle.id}: ${currentSrc}`);
+      setShouldRender(false);
     }
   };
 
-  // Reset image source if vehicle prop changes
   useEffect(() => {
-    setImageSrc(vehicle.image_url || defaultImage);
-    setShouldRender(true); // Reset render state when vehicle changes
-  }, [vehicle.image_url]);
+    setImageSrc(vehicle.imageSrc || DEFAULT_IMAGE);
+    setShouldRender(true);
+  }, [vehicle.imageSrc]);
 
-  // Do not render the card if images fail
   if (!shouldRender) {
     console.log(`Card not rendered for vehicle ${vehicle.id} due to image failure`);
     return null;
@@ -74,7 +75,6 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
           e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
         }}
       >
-        {/* New Label */}
         {vehicle.isNew && (
           <span
             className="position-absolute text-white px-3 py-1 rounded-pill"
@@ -91,12 +91,11 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
           </span>
         )}
 
-        {/* Image Container */}
         <div
           style={{
             position: 'relative',
-            paddingTop: '66.67%', // Maintain aspect ratio (3:2)
-            backgroundColor: '#f5f5f5', // Fallback background color
+            paddingTop: '66.67%',
+            backgroundColor: '#f5f5f5',
           }}
         >
           <img
@@ -122,7 +121,6 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
           />
         </div>
 
-        {/* Card Body */}
         <div className="card-body" style={{ padding: '16px' }}>
           <div className="d-flex justify-content-between align-items-start mb-3">
             <div>
