@@ -38,10 +38,9 @@ except Exception as e:
     logger.error(f"Failed to fetch user_ids: {e}")
     raise
 
-# Select approximately half of the users
-num_users_to_process = max(1, len(all_user_ids) // 2)
-user_ids = random.sample(all_user_ids, k=num_users_to_process)
-logger.info(f"Selected {len(user_ids)} users for favorite cars assignment")
+# Use all user_ids (no random sampling)
+user_ids = all_user_ids
+logger.info(f"Processing favorite cars for {len(user_ids)} users")
 
 # Fetch user preferences
 try:

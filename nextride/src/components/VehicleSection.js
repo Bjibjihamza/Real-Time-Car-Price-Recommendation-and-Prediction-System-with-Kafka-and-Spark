@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FaCircleArrowDown } from 'react-icons/fa6';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -13,15 +13,13 @@ function VehicleSection() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const limit = 8;
 
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    setPage(1);
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
+      console.log('Fetching data for page:', page, 'user:', user?.userId);
       const config = user?.token ? { headers: { Authorization: `Bearer ${user.token}` } } : {};
 
       const allCarsResponse = await axios.get(`http://localhost:5000/api/cars?page=${page}&limit=${limit}`, config);
@@ -29,54 +27,73 @@ function VehicleSection() {
       setTotalPages(Math.ceil(allCarsResponse.data.total / limit) || 1);
 
       if (user) {
-        const recommendedResponse = await axios.get('http://localhost:5000/api/users/recommendations', config);
+        const [recommendedResponse, favoritesResponse] = await Promise.all([
+          axios.get('http://localhost:5000/api/users/recommendations', config),
+          axios.get('http://localhost:5000/api/users/favorites', config),
+        ]);
         setRecommendedVehicles(recommendedResponse.data.cars || []);
-
-        const favoritesResponse = await axios.get('http://localhost:5000/api/users/favorites', config);
         setFavorites(favoritesResponse.data.cars || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to load vehicles. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [user, page]);
 
   useEffect(() => {
     fetchData();
-  }, [user, page]);
+  }, [fetchData]);
 
-  const handleSaveToggle = async (vehicleId, shouldSave) => {
-    if (!user) {
-      setError('Please log in to save vehicles.');
-      return;
-    }
+  // Create a Set of favorite IDs for efficient lookup
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
 
-    try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      if (shouldSave) {
-        await axios.post('http://localhost:5000/api/users/favorites', { carId: vehicleId }, config);
-        const vehicleToAdd = vehicles.find(v => v.id === vehicleId) || 
-                            recommendedVehicles.find(v => v.id === vehicleId);
-        if (vehicleToAdd) {
-          setFavorites([...favorites, vehicleToAdd]);
-        }
-      } else {
-        await axios.delete('http://localhost:5000/api/users/favorites', {
-          headers: { Authorization: `Bearer ${user.token}` },
-          data: { carId: vehicleId }
-        });
-        setFavorites(favorites.filter(f => f.id !== vehicleId));
+  const handleSaveToggle = useCallback(
+    async (vehicleId, shouldSave) => {
+      if (!user) {
+        setError('Please log in to save vehicles.');
+        return;
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      setError('Failed to update favorites. Please try again.');
-    }
+
+      try {
+        const config = { headers: { Authorization: `Bearer ${user.token}` } };
+        if (shouldSave) {
+          await axios.post('http://localhost:5000/api/users/favorites', { carId: vehicleId }, config);
+          const vehicleToAdd =
+            vehicles.find((v) => v.id === vehicleId) ||
+            recommendedVehicles.find((v) => v.id === vehicleId);
+          if (vehicleToAdd && !favoriteIds.has(vehicleId)) {
+            setFavorites((prev) => [...prev, vehicleToAdd]);
+          }
+        } else {
+          await axios.delete('http://localhost:5000/api/users/favorites', {
+            headers: { Authorization: `Bearer ${user.token}` },
+            data: { carId: vehicleId },
+          });
+          setFavorites((prev) => prev.filter((f) => f.id !== vehicleId));
+        }
+      } catch (error) {
+        console.error('Error toggling favorite:', error);
+        setError('Failed to update favorites. Please try again.');
+      }
+    },
+    [user, vehicles, recommendedVehicles, favoriteIds]
+  );
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
   };
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to the top of the section instead of the entire page
+      const section = document.querySelector('.container');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
@@ -88,46 +105,145 @@ function VehicleSection() {
     return new Date(year, month - 1, day, hours, minutes);
   };
 
-  const displayedVehicles = activeTab === 'all' ? vehicles :
-                          activeTab === 'recommended' ? recommendedVehicles :
-                          vehicles;
+  const displayedVehicles = useMemo(
+    () => (activeTab === 'all' ? vehicles : activeTab === 'recommended' ? recommendedVehicles : vehicles),
+    [activeTab, vehicles, recommendedVehicles]
+  );
 
   return (
-    <section className="container py-5">
+    <section className="container py-5" style={{ maxWidth: '1400px' }}>
+      {/* Error Message */}
       {error && (
-        <div className="alert alert-danger d-flex align-items-center mb-4">
+        <div
+          className="alert d-flex align-items-center mb-5"
+          style={{
+            backgroundColor: '#fee2e2',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '16px 24px',
+            color: '#b91c1c',
+            fontSize: '16px',
+            fontWeight: '500',
+          }}
+        >
           <span>{error}</span>
         </div>
       )}
 
-      <div className="mb-4">
-        <h1 className="fw-bold mb-4">Explore All Vehicles</h1>
-
-        <div className="d-flex flex-wrap gap-2 mb-4">
+      {/* Header and Tabs */}
+      <div className="mb-5">
+        <h1
+          className="fw-bold mb-4"
+          style={{
+            fontSize: '32px',
+            color: '#1a1a1a',
+            letterSpacing: '-0.5px',
+          }}
+        >
+          Explore All Vehicles
+        </h1>
+        <div className="d-flex flex-wrap gap-3">
           <button
-            className={`btn rounded-pill px-4 py-2 ${activeTab === 'all' ? 'btn-warning' : 'btn-light'}`}
             onClick={() => handleTabClick('all')}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '20px',
+              border: 'none',
+              backgroundColor: activeTab === 'all' ? '#ffc107' : '#f0f0f0',
+              color: activeTab === 'all' ? '#fff' : '#666',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'background-color 0.3s ease, color 0.3s ease',
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = activeTab === 'all' ? '#e0a800' : '#e0e0e0')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = activeTab === 'all' ? '#ffc107' : '#f0f0f0')
+            }
           >
             All
           </button>
           <button
-            className={`btn rounded-pill px-4 py-2 ${activeTab === 'recommended' ? 'btn-warning' : 'btn-light'}`}
             onClick={() => handleTabClick('recommended')}
             disabled={!user}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '20px',
+              border: 'none',
+              backgroundColor: activeTab === 'recommended' ? '#ffc107' : '#f0f0f0',
+              color: activeTab === 'recommended' ? '#fff' : user ? '#666' : '#aaa',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: user ? 'pointer' : 'not-allowed',
+              transition: 'background-color 0.3s ease, color 0.3s ease',
+            }}
+            onMouseEnter={(e) =>
+              user &&
+              (e.currentTarget.style.backgroundColor =
+                activeTab === 'recommended' ? '#e0a800' : '#e0e0e0')
+            }
+            onMouseLeave={(e) =>
+              user &&
+              (e.currentTarget.style.backgroundColor = activeTab === 'recommended' ? '#ffc107' : '#f0f0f0')
+            }
           >
             Recommended for you
           </button>
-          <button className="btn btn-light rounded-pill px-4 py-2">...</button>
+          <button
+            disabled
+            style={{
+              padding: '10px 24px',
+              borderRadius: '20px',
+              border: 'none',
+              backgroundColor: '#f0f0f0',
+              color: '#aaa',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'not-allowed',
+            }}
+          >
+            ...
+          </button>
         </div>
       </div>
 
-      <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-        {displayedVehicles.length > 0 ? (
-          displayedVehicles.map((vehicle) => {
+      {/* Vehicle Grid or Loading/No Results */}
+      {isLoading ? (
+        <div
+          className="col-12 text-center py-5"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              border: '4px solid #ffc107',
+              borderTop: '4px solid transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }}
+          />
+          <h5
+            style={{
+              fontSize: '18px',
+              color: '#666',
+              margin: 0,
+            }}
+          >
+            Loading vehicles...
+          </h5>
+        </div>
+      ) : displayedVehicles.length > 0 ? (
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+          {displayedVehicles.map((vehicle) => {
             const parsedDate = parseDate(vehicle.publication_date);
-            const isNew = parsedDate 
-              ? (new Date() - parsedDate) < 7 * 24 * 60 * 60 * 1000 
-              : false;
+            const isNew = parsedDate ? new Date() - parsedDate < 7 * 24 * 60 * 60 * 1000 : false;
 
             return (
               <VehicleCard
@@ -137,39 +253,130 @@ function VehicleSection() {
                   name: vehicle.title || `${vehicle.brand} ${vehicle.model}`,
                   specs: `${vehicle.fuel_type || ''} ${vehicle.transmission || ''}`.trim(),
                   price: vehicle.price ? `${vehicle.price.toLocaleString()} MAD` : 'Price on request',
-                  isNew: isNew,
+                  isNew,
+                  image_url: vehicle.image_url,
                 }}
-                isSaved={favorites.some(f => f.id === vehicle.id)}
+                isSaved={favoriteIds.has(vehicle.id)}
                 onSaveToggle={handleSaveToggle}
               />
             );
-          })
-        ) : (
-          <div className="col-12 text-center py-5">
-            <h5>No vehicles found</h5>
-            <p className="text-muted">Try adjusting your preferences or check back later.</p>
-          </div>
-        )}
-      </div>
+          })}
+        </div>
+      ) : (
+        <div
+          className="col-12 text-center py-5"
+          style={{
+            backgroundColor: '#f9f9f9',
+            borderRadius: '12px',
+            padding: '40px',
+          }}
+        >
+          <h5
+            style={{
+              fontSize: '20px',
+              color: '#1a1a1a',
+              marginBottom: '8px',
+            }}
+          >
+            No vehicles found
+          </h5>
+          <p
+            style={{
+              fontSize: '16px',
+              color: '#666',
+              margin: 0,
+            }}
+          >
+            Try adjusting your preferences or check back later.
+          </p>
+        </div>
+      )}
 
+      {/* Pagination */}
       {activeTab === 'all' && totalPages > 1 && (
         <div className="d-flex justify-content-center mt-5">
           <nav aria-label="Page navigation">
-            <ul className="pagination">
+            <ul
+              className="pagination"
+              style={{
+                display: 'flex',
+                gap: '8px',
+                alignItems: 'center',
+              }}
+            >
               <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => handlePageChange(page - 1)}>
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(page - 1)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: page === 1 ? '#f0f0f0' : '#fff',
+                    color: page === 1 ? '#aaa' : '#1a1a1a',
+                    fontWeight: '500',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    cursor: page === 1 ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.3s ease, color 0.3s ease',
+                  }}
+                  onMouseEnter={(e) =>
+                    page !== 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                  }
+                  onMouseLeave={(e) =>
+                    page !== 1 && (e.currentTarget.style.backgroundColor = '#fff')
+                  }
+                >
                   Previous
                 </button>
               </li>
               {[...Array(totalPages)].map((_, index) => (
                 <li key={index + 1} className={`page-item ${page === index + 1 ? 'active' : ''}`}>
-                  <button className="page-link" onClick={() => handlePageChange(index + 1)}>
+                  <button
+                    className="page-link"
+                    onClick={() => handlePageChange(index + 1)}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: page === index + 1 ? '#ffc107' : '#fff',
+                      color: page === index + 1 ? '#fff' : '#1a1a1a',
+                      fontWeight: '500',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                      transition: 'background-color 0.3s ease, color 0.3s ease',
+                    }}
+                    onMouseEnter={(e) =>
+                      page !== index + 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                    }
+                    onMouseLeave={(e) =>
+                      page !== index + 1 && (e.currentTarget.style.backgroundColor = '#fff')
+                    }
+                  >
                     {index + 1}
                   </button>
                 </li>
               ))}
               <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                <button className="page-link" onClick={() => handlePageChange(page + 1)}>
+                <button
+                  className="page-link"
+                  onClick={() => handlePageChange(page + 1)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: page === totalPages ? '#f0f0f0' : '#fff',
+                    color: page === totalPages ? '#aaa' : '#1a1a1a',
+                    fontWeight: '500',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                    transition: 'background-color 0.3s ease, color 0.3s ease',
+                  }}
+                  onMouseEnter={(e) =>
+                    page !== totalPages && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                  }
+                  onMouseLeave={(e) =>
+                    page !== totalPages && (e.currentTarget.style.backgroundColor = '#fff')
+                  }
+                >
                   Next
                 </button>
               </li>
@@ -178,11 +385,31 @@ function VehicleSection() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingTop: '50px' }}>
-        <FaCircleArrowDown
-          style={{ margin: 'auto', fontSize: '60px', color: '#ffc107', marginBottom: '30px' }}
-        />
-      </div>
+      {/* Scroll Indicator */}
+      {activeTab === 'all' && page < totalPages && (
+        <div
+          className="d-flex justify-content-center mt-5"
+          style={{
+            position: 'relative',
+            paddingTop: '50px',
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              border: '2px solid #ffc107',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'bounce 1.5s infinite',
+            }}
+          >
+            <FaCircleArrowDown style={{ fontSize: '24px', color: '#ffc107' }} />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

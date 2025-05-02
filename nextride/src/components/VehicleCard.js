@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiShare2 } from 'react-icons/fi';
 import { FaRegHeart, FaHeart } from 'react-icons/fa';
 import { MdOutlineArrowOutward } from 'react-icons/md';
-import carimage from '../assets/images/carannonceimage.png';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
   const { user } = useAuth();
+  const defaultImage = '/images/cars/default/image_1.jpg';
+  const [imageSrc, setImageSrc] = useState(vehicle.image_url || defaultImage);
+  const [shouldRender, setShouldRender] = useState(true);
 
+  // Handle view details API call
   const handleViewDetails = async () => {
     if (user) {
       try {
@@ -28,56 +31,190 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
     }
   };
 
+  // Handle image load errors
+  const handleImageError = (e) => {
+    const currentSrc = e.target.src;
+    if (currentSrc !== `${window.location.origin}${defaultImage}`) {
+      console.warn(`Image failed for vehicle ${vehicle.id}: ${currentSrc}, falling back to default`);
+      setImageSrc(defaultImage);
+    } else {
+      console.error(`Default image failed for vehicle ${vehicle.id}: ${currentSrc}`);
+      setShouldRender(false); // Do not render the card if default image fails
+    }
+  };
+
+  // Reset image source if vehicle prop changes
+  useEffect(() => {
+    setImageSrc(vehicle.image_url || defaultImage);
+    setShouldRender(true); // Reset render state when vehicle changes
+  }, [vehicle.image_url]);
+
+  // Do not render the card if images fail
+  if (!shouldRender) {
+    console.log(`Card not rendered for vehicle ${vehicle.id} due to image failure`);
+    return null;
+  }
+
   return (
     <div className="col">
-      <div className="card h-100 rounded-4 border-0 position-relative" style={{ boxShadow: '0px 5px 4px 0px #57575787' }}>
+      <div
+        className="card h-100 border-0 position-relative transition-all"
+        style={{
+          borderRadius: '12px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-5px)';
+          e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        {/* New Label */}
         {vehicle.isNew && (
           <span
-            className="position-absolute top-1 start-0 text-white px-2 py-1 m-2 rounded-pill"
-            style={{ backgroundColor: '#367209', fontWeight: '600', fontSize: '12px' }}
+            className="position-absolute text-white px-3 py-1 rounded-pill"
+            style={{
+              top: '12px',
+              left: '12px',
+              backgroundColor: '#367209',
+              fontWeight: '600',
+              fontSize: '12px',
+              zIndex: 1,
+            }}
           >
             New
           </span>
         )}
 
-        {/* Vehicle Image */}
-        <img src={carimage} className="card-img-top p-3" alt={vehicle.name} />
+        {/* Image Container */}
+        <div
+          style={{
+            position: 'relative',
+            paddingTop: '66.67%', // Maintain aspect ratio (3:2)
+            backgroundColor: '#f5f5f5', // Fallback background color
+          }}
+        >
+          <img
+            src={imageSrc}
+            className="card-img-top"
+            alt={vehicle.name || 'Vehicle'}
+            loading="lazy"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderTopLeftRadius: '12px',
+              borderTopRightRadius: '12px',
+              transition: 'transform 0.3s ease',
+            }}
+            onLoad={() => console.log(`Image loaded for vehicle ${vehicle.id}: ${imageSrc}`)}
+            onError={handleImageError}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          />
+        </div>
 
-        <hr className="m-0 mt-3" />
-
-        <div className="card-body">
-          <div className="d-flex justify-content-between align-items-start mb-2">
+        {/* Card Body */}
+        <div className="card-body" style={{ padding: '16px' }}>
+          <div className="d-flex justify-content-between align-items-start mb-3">
             <div>
-              <h5 className="card-title fw-bold mb-1">{vehicle.name}</h5>
-              <p className="card-text text-muted small mb-0">{vehicle.specs}</p>
+              <h5
+                className="card-title fw-bold mb-1"
+                style={{
+                  fontSize: '16px',
+                  color: '#1a1a1a',
+                  textTransform: 'uppercase',
+                  lineHeight: '1.2',
+                }}
+              >
+                {vehicle.name}
+              </h5>
+              <p
+                className="card-text text-muted mb-0"
+                style={{
+                  fontSize: '14px',
+                  color: '#666',
+                }}
+              >
+                {vehicle.specs}
+              </p>
             </div>
-            <div className="d-flex">
+            <div className="d-flex gap-2">
               <button
-                className="btn btn-light btn-sm p-1"
+                className="btn btn-light p-1 rounded-circle"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  backgroundColor: '#f0f0f0',
+                  transition: 'background-color 0.3s ease',
+                }}
                 onClick={() => onSaveToggle(vehicle.id, !isSaved)}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f0f0f0')}
               >
                 {isSaved ? (
-                  <FaHeart className="text-danger" />
+                  <FaHeart style={{ color: '#e63946', fontSize: '16px' }} />
                 ) : (
-                  <FaRegHeart className="text-muted" />
+                  <FaRegHeart style={{ color: '#666', fontSize: '16px' }} />
                 )}
               </button>
-              <button className="btn btn-light btn-sm p-1 ms-1">
-                <FiShare2 className="text-muted" />
+              <button
+                className="btn btn-light p-1 rounded-circle"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  backgroundColor: '#f0f0f0',
+                  transition: 'background-color 0.3s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f0f0f0')}
+              >
+                <FiShare2 style={{ color: '#666', fontSize: '16px' }} />
               </button>
             </div>
           </div>
-          <hr className="my-2" />
-          <div className="d-flex justify-content-between">
-            <span className="fw-bold">{vehicle.price}</span>
+
+          <div className="d-flex justify-content-between align-items-center">
+            <span
+              className="fw-bold"
+              style={{
+                fontSize: '16px',
+                color: '#1a1a1a',
+              }}
+            >
+              {vehicle.price}
+            </span>
             <Link
               to={`/car/${vehicle.id}`}
-              className="text-decoration-none small d-flex align-items-center mt-2"
-              style={{ color: '#BC7328' }}
+              className="text-decoration-none d-flex align-items-center gap-1"
+              style={{
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#BC7328',
+                transition: 'color 0.3s ease',
+              }}
               onClick={handleViewDetails}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#a56324')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#BC7328')}
             >
               View Details
-              <MdOutlineArrowOutward />
+              <MdOutlineArrowOutward style={{ fontSize: '16px' }} />
             </Link>
           </div>
         </div>
@@ -86,4 +223,4 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
   );
 };
 
-export default VehicleCard;
+export default memo(VehicleCard);

@@ -67,10 +67,11 @@ exports.getPreferences = async (req, res) => {
 
 exports.updatePreferences = async (req, res) => {
   try {
-    const { userId, preferred_brands, preferred_fuel_types, preferred_transmissions, budget_min, budget_max, mileage_min, mileage_max, preferred_years, preferred_door_count } = req.body;
-    if (!userId) return res.status(400).json({ message: 'User ID is required' });
+    const userId = req.userId; // Use userId from JWT token
+    if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
     if (!isUUID(userId)) return res.status(400).json({ message: 'Invalid User ID format' });
-    const preferences = await UserPreference.update(userId, {
+
+    const {
       preferred_brands,
       preferred_fuel_types,
       preferred_transmissions,
@@ -80,11 +81,33 @@ exports.updatePreferences = async (req, res) => {
       mileage_max,
       preferred_years,
       preferred_door_count
+    } = req.body;
+
+    // Validate payload
+    if (!Array.isArray(preferred_brands) ||
+        !Array.isArray(preferred_fuel_types) ||
+        !Array.isArray(preferred_transmissions) ||
+        !Array.isArray(preferred_years) ||
+        !Array.isArray(preferred_door_count)) {
+      return res.status(400).json({ message: 'Array fields must be arrays' });
+    }
+
+    const preferences = await UserPreference.update(userId, {
+      preferred_brands: preferred_brands || [],
+      preferred_fuel_types: preferred_fuel_types || [],
+      preferred_transmissions: preferred_transmissions || [],
+      budget_min: Number.isInteger(budget_min) ? budget_min : null,
+      budget_max: Number.isInteger(budget_max) ? budget_max : null,
+      mileage_min: Number.isInteger(mileage_min) ? mileage_min : null,
+      mileage_max: Number.isInteger(mileage_max) ? mileage_max : null,
+      preferred_years: preferred_years || [],
+      preferred_door_count: preferred_door_count || []
     });
+
     res.status(200).json({ message: 'Preferences updated successfully', preferences });
   } catch (error) {
     console.error('Error updating preferences:', error);
-    res.status(500).json({ message: 'Error updating preferences' });
+    res.status(500).json({ message: 'Error updating preferences', error: error.message });
   }
 };
 

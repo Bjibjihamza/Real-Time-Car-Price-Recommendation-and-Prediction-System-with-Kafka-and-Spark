@@ -34,17 +34,16 @@ const UserProfilePage = () => {
     preferred_door_count: [],
   });
   const [error, setError] = useState('');
-
-  const profileRef = useRef(null);
-  const preferencesRef = useRef(null);
-  const favoritesRef = useRef(null);
-  const recommendationsRef = useRef(null);
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success',
   });
+
+  const profileRef = useRef(null);
+  const preferencesRef = useRef(null);
+  const favoritesRef = useRef(null);
+  const recommendationsRef = useRef(null);
 
   const brands = [
     'Abarth', 'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'BYD', 'Cadillac',
@@ -58,7 +57,6 @@ const UserProfilePage = () => {
     'Rover', 'Seat', 'Simca', 'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki',
     'Tata', 'Toyota', 'Volkswagen', 'Volvo', 'Zotye'
   ];
-
   const fuelTypes = ['Diesel', 'Essence', 'Hybride'];
   const transmissions = ['Manuelle', 'Automatique'];
   const cities = [
@@ -73,13 +71,16 @@ const UserProfilePage = () => {
   const years = [...Array(2025 - 1950 + 1).keys()].map(i => 1950 + i);
   const doorCounts = [3, 5, 7];
 
+  const brandMap = Object.fromEntries(brands.map(b => [b.toLowerCase(), b]));
+  const fuelMap = Object.fromEntries(fuelTypes.map(f => [f.toLowerCase(), f]));
+  const transmissionMap = Object.fromEntries(transmissions.map(t => [t.toLowerCase(), t]));
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
       return;
     }
 
-    // Set active tab based on query parameters and scroll to section
     const queryParams = new URLSearchParams(location.search);
     if (queryParams.get('favorites') === 'true') {
       setActiveTab('favorites');
@@ -92,10 +93,9 @@ const UserProfilePage = () => {
       preferencesRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Fetch user data and preferences
     const fetchUserData = async () => {
       if (!user?.userId || !user?.token) {
-        console.log('User or token missing:', { userId: user?.userId, token: user?.token });
+        console.error('User or token missing:', { userId: user?.userId, token: user?.token });
         setError('Authentication error. Please log in again.');
         logout();
         navigate('/login');
@@ -103,9 +103,7 @@ const UserProfilePage = () => {
       }
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        console.log('Sending request with config:', config);
-    
-        // Fetch user profile
+
         const userResponse = await axios.get('http://localhost:5000/api/users', config);
         const userData = userResponse.data.user;
         setUserData(userData);
@@ -115,31 +113,37 @@ const UserProfilePage = () => {
           age: userData.age || '',
           location: userData.location || '',
         });
-    
-        // Fetch preferences
+
         const preferencesResponse = await axios.get('http://localhost:5000/api/users/preferences', config);
-        const preferencesData = preferencesResponse.data.preferences;
-        setPreferences(preferencesData);
-        setPreferencesData({
-          preferred_brands: preferencesData.preferred_brands || [],
-          preferred_fuel_types: preferencesData.preferred_fuel_types || [],
-          preferred_transmissions: preferencesData.preferred_transmissions || [],
+        const preferencesData = preferencesResponse.data.preferences || {};
+
+        const normalizedPreferences = {
+          preferred_brands: (preferencesData.preferred_brands || []).map(brand =>
+            brandMap[brand.toLowerCase()] || brand
+          ).filter(brand => brands.includes(brand)),
+          preferred_fuel_types: (preferencesData.preferred_fuel_types || []).map(fuel =>
+            fuelMap[fuel.toLowerCase()] || fuel
+          ).filter(fuel => fuelTypes.includes(fuel)),
+          preferred_transmissions: (preferencesData.preferred_transmissions || []).map(trans =>
+            transmissionMap[trans.toLowerCase()] || trans
+          ).filter(trans => transmissions.includes(trans)),
           budget_min: preferencesData.budget_min || '',
           budget_max: preferencesData.budget_max || '',
           mileage_min: preferencesData.mileage_min || '',
           mileage_max: preferencesData.mileage_max || '',
-          preferred_years: preferencesData.preferred_years || [],
-          preferred_door_count: preferencesData.preferred_door_count || [],
-        });
-    
-        // Fetch favorites
+          preferred_years: (preferencesData.preferred_years || []).filter(year => years.includes(year)),
+          preferred_door_count: (preferencesData.preferred_door_count || []).filter(doors => doorCounts.includes(doors)),
+        };
+
+        setPreferences(normalizedPreferences);
+        setPreferencesData(normalizedPreferences);
+        console.log('Normalized preferencesData:', normalizedPreferences);
+
         const favoritesResponse = await axios.get('http://localhost:5000/api/users/favorites', config);
         setFavorites(favoritesResponse.data.cars || []);
-    
-        // Fetch recommendations
+
         const recommendationsResponse = await axios.get('http://localhost:5000/api/users/recommendations', config);
         setRecommendations(recommendationsResponse.data.cars || []);
-    
       } catch (error) {
         console.error('Error fetching user data or preferences:', error);
         if (error.response) {
@@ -168,45 +172,35 @@ const UserProfilePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
   const handlePreferenceChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, type, checked } = e.target;
+    const [arrayName, itemValue] = name.split('-');
 
     if (type === 'checkbox') {
-      const { checked } = e.target;
-      const arrayName = name.split('-')[0];
-      const itemValue = name.split('-')[1];
-
       setPreferencesData(prev => {
-        if (checked) {
-          return {
-            ...prev,
-            [arrayName]: [...prev[arrayName], arrayName === 'preferred_years' || arrayName === 'preferred_door_count' ? parseInt(itemValue) : itemValue]
-          };
-        } else {
-          return {
-            ...prev,
-            [arrayName]: prev[arrayName].filter(item => item !== (arrayName === 'preferred_years' || arrayName === 'preferred_door_count' ? parseInt(itemValue) : itemValue))
-          };
-        }
+        const currentArray = prev[arrayName] || [];
+        const parsedValue = (arrayName === 'preferred_years' || arrayName === 'preferred_door_count')
+          ? parseInt(itemValue)
+          : itemValue;
+
+        return {
+          ...prev,
+          [arrayName]: checked
+            ? [...currentArray, parsedValue]
+            : currentArray.filter(item => item !== parsedValue)
+        };
       });
     } else {
-      setPreferencesData({
-        ...preferencesData,
-        [name]: value,
-      });
+      setPreferencesData({ ...preferencesData, [name]: e.target.value });
     }
   };
 
   const handleSaveProfile = async () => {
     try {
       setError('');
-      // Validate inputs
       if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
         setError('Invalid email address');
         return;
@@ -223,42 +217,53 @@ const UserProfilePage = () => {
         setError('Minimum mileage cannot exceed maximum mileage');
         return;
       }
-  
+
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      // Update user profile
+
       const updatedUser = {
         username: formData.username,
         email: formData.email,
-        age: parseInt(formData.age) || userData.age,
-        location: formData.location,
+        age: formData.age ? parseInt(formData.age) : undefined,
+        location: formData.location || undefined,
       };
       await axios.put('http://localhost:5000/api/users', updatedUser, config);
-  
-      // Update preferences
+
       const updatedPreferences = {
-        preferred_brands: preferencesData.preferred_brands,
-        preferred_fuel_types: preferencesData.preferred_fuel_types,
-        preferred_transmissions: preferencesData.preferred_transmissions,
-        budget_min: parseInt(preferencesData.budget_min) || undefined,
-        budget_max: parseInt(preferencesData.budget_max) || undefined,
-        mileage_min: parseInt(preferencesData.mileage_min) || undefined,
-        mileage_max: parseInt(preferencesData.mileage_max) || undefined,
-        preferred_years: preferencesData.preferred_years,
-        preferred_door_count: preferencesData.preferred_door_count,
+        preferred_brands: (preferencesData.preferred_brands || []).filter(brand => brands.includes(brand)),
+        preferred_fuel_types: (preferencesData.preferred_fuel_types || []).filter(fuel => fuelTypes.includes(fuel)),
+        preferred_transmissions: (preferencesData.preferred_transmissions || []).filter(trans => transmissions.includes(trans)),
+        budget_min: preferencesData.budget_min ? parseInt(preferencesData.budget_min) : undefined,
+        budget_max: preferencesData.budget_max ? parseInt(preferencesData.budget_max) : undefined,
+        mileage_min: preferencesData.mileage_min ? parseInt(preferencesData.mileage_min) : undefined,
+        mileage_max: preferencesData.mileage_max ? parseInt(preferencesData.mileage_max) : undefined,
+        preferred_years: (preferencesData.preferred_years || []).filter(year => years.includes(year)),
+        preferred_door_count: (preferencesData.preferred_door_count || []).filter(doors => doorCounts.includes(doors)),
       };
       await axios.put('http://localhost:5000/api/users/preferences', updatedPreferences, config);
-  
-      // Update local state
+
       setUserData({ ...userData, ...updatedUser });
       setPreferences(updatedPreferences);
+      setPreferencesData(updatedPreferences);
       setEditMode(false);
+      setSnackbar({
+        open: true,
+        message: 'Profile and preferences updated successfully!',
+        severity: 'success',
+      });
     } catch (error) {
       console.error('Error saving profile or preferences:', error);
-      if (error.response?.status === 401) {
-        logout();
-        navigate('/login');
+      if (error.response) {
+        if (error.response.status === 401) {
+          setError('Session expired. Please log in again.');
+          logout();
+          navigate('/login');
+        } else if (error.response.status === 400) {
+          setError(error.response.data.message || 'Invalid request. Please check your inputs.');
+        } else {
+          setError('Failed to save profile or preferences. Please try again.');
+        }
       } else {
-        setError('Failed to save profile or preferences. Please try again.');
+        setError('Unable to connect to the server. Please check your network.');
       }
     }
   };
@@ -271,9 +276,9 @@ const UserProfilePage = () => {
       location: userData?.location || '',
     });
     setPreferencesData({
-      preferred_brands: preferences?.preferred_brands || [],
-      preferred_fuel_types: preferences?.preferred_fuel_types || [],
-      preferred_transmissions: preferences?.preferred_transmissions || [],
+      preferred_brands: (preferences?.preferred_brands || []).map(brand => brandMap[brand.toLowerCase()] || brand).filter(brand => brands.includes(brand)),
+      preferred_fuel_types: (preferences?.preferred_fuel_types || []).map(fuel => fuelMap[fuel.toLowerCase()] || fuel).filter(fuel => fuelTypes.includes(fuel)),
+      preferred_transmissions: (preferences?.preferred_transmissions || []).map(trans => transmissionMap[trans.toLowerCase()] || trans).filter(trans => transmissions.includes(trans)),
       budget_min: preferences?.budget_min || '',
       budget_max: preferences?.budget_max || '',
       mileage_min: preferences?.mileage_min || '',
@@ -291,9 +296,7 @@ const UserProfilePage = () => {
   };
 
   const handleCloseSnackbar = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+    if (reason === 'clickaway') return;
     setSnackbar({ ...snackbar, open: false });
   };
 
@@ -309,7 +312,6 @@ const UserProfilePage = () => {
   }
 
   return (
-    
     <div className="container py-5">
       {error && (
         <div className="alert alert-danger d-flex align-items-center mb-4">
@@ -318,7 +320,6 @@ const UserProfilePage = () => {
         </div>
       )}
       <div className="row">
-        {/* Sidebar */}
         <div className="col-lg-3 mb-4">
           <div className="card shadow-sm rounded-4 overflow-hidden">
             <div className="card-body p-0">
@@ -337,7 +338,7 @@ const UserProfilePage = () => {
                   <FaUser className="me-3" /> Profile Information
                 </button>
                 <button
-                  className={`list-group-item list-group-item-action d-flex align-items-center ${activeTab === 'preferences' ? 'active bg-warning text-white' : ''}`}
+                  className={`list-group-item list SIST-group-item-action d-flex align-items-center ${activeTab === 'preferences' ? 'active bg-warning text-white' : ''}`}
                   onClick={() => handleTabChange('preferences', preferencesRef)}
                 >
                   <FaCar className="me-3" /> Car Preferences
@@ -359,11 +360,9 @@ const UserProfilePage = () => {
           </div>
         </div>
 
-        {/* Main content */}
         <div className="col-lg-9">
           <div className="card shadow-sm rounded-4">
             <div className="card-body p-4">
-              {/* Profile Information */}
               <div ref={profileRef}>
                 {activeTab === 'profile' && (
                   <>
@@ -529,7 +528,6 @@ const UserProfilePage = () => {
                 )}
               </div>
 
-              {/* Car Preferences */}
               <div ref={preferencesRef}>
                 {activeTab === 'preferences' && (
                   <>
@@ -847,7 +845,6 @@ const UserProfilePage = () => {
                 )}
               </div>
 
-              {/* Saved Cars */}
               <div ref={favoritesRef}>
                 {activeTab === 'favorites' && (
                   <>
@@ -858,76 +855,65 @@ const UserProfilePage = () => {
                       </Link>
                     </div>
                     {favorites.length > 0 ? (
-  <div className="row row-cols-1 row-cols-md-2 g-4">
-    {favorites.map(car => (
-      <div key={car.id} className="col">
-        <div className="card h-100 border-0 shadow-sm">
-          <div className="row g-0">
-            <div className="col-4">
-              <img src={car.image || 'https://via.placeholder.com/150'} className="img-fluid rounded-start h-100" alt={car.title} style={{ objectFit: 'cover' }} />
-            </div>
-            <div className="col-8">
-              <div className="card-body">
-                <div className="d-flex justify-content-between">
-                  <h5 className="card-title">{car.title}</h5>
-                  <button
+                      <div className="row row-cols-1 row-cols-md-2 g-4">
+                        {favorites.map(car => (
+                          <div key={car.id} className="col">
+                            <div className="card h-100 border-0 shadow-sm">
+                              <div className="row g-0">
+                                <div className="col-4">
+                                  <img src={car.image || 'https://via.placeholder.com/150'} className="img-fluid rounded-start h-100" alt={car.title} style={{ objectFit: 'cover' }} />
+                                </div>
+                                <div className="col-8">
+                                  <div className="card-body">
+                                    <div className="d-flex justify-content-between">
+                                      <h5 className="card-title">{car.title}</h5>
+                                      <button
   className="btn btn-sm text-danger"
   onClick={async () => {
     try {
       if (!car.id) {
-        console.error('id is missing for car:', car);
-        setError('Invalid car data. Please try again.');
+        setError('Invalid car data.');
         return;
       }
-      console.log('Removing favorite with userId:', user.userId, 'carId:', car.id);
-      const response = await axios.delete('http://localhost:5000/api/users/favorites', {
+      await axios.delete('http://localhost:5000/api/users/favorites', {
         headers: { Authorization: `Bearer ${user.token}` },
-        data: { userId: user.userId, carId: car.id },
-        timeout: 5000
+        data: { userId: user.userId, carId: car.id }
       });
-      console.log('Remove favorite response:', response.data);
       setFavorites(favorites.filter(f => f.id !== car.id));
-      setError('');
-      setSnackbar({
-        open: true,
-        message: 'Car removed from favorites!',
-        severity: 'success',
-      });
+      setSnackbar({ open: true, message: 'Car removed from favorites!', severity: 'success' });
     } catch (error) {
-      console.error('Error removing favorite:', error.response?.data || error.message);
-      setError(error.response?.data?.message || 'Failed to remove favorite car. Please try again.');
+      setError(error.response?.data?.message || 'Failed to remove favorite.');
     }
   }}
 >
   <FaHeart size={16} />
 </button>
-                </div>
-                <p className="card-text text-warning fw-bold">{car.price ? `${car.price.toLocaleString()} MAD` : 'Price not available'}</p>
-                <div className="mt-2">
-                  <Link to={`/car/${car.id}`} className="btn btn-sm btn-warning me-2">View Details</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-5">
-    <MdFavorite size={60} className="text-muted mb-3" />
-    <h5>No saved cars</h5>
-    <p className="text-muted">Cars you save will appear here</p>
-    <Link to="/predict" className="btn btn-warning rounded-pill mt-3">
-      Find Cars to Save
-    </Link>
-  </div>
-)}
+                                    </div>
+                                    <p className="card-text text-warning fw-bold">{car.price ? `${car.price.toLocaleString()} MAD` : 'Price not available'}</p>
+                                    <div className="mt-2">
+                                      <Link to={`/car/${car.id}`} className="btn btn-sm btn-warning me-2">View Details</Link>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-5">
+                        <MdFavorite size={60} className="text-muted mb-3" />
+                        <h5>No saved cars</h5>
+                        <p className="text-muted">Cars you save will appear here</p>
+                        <Link to="/predict" className="btn btn-warning rounded-pill mt-3">
+                          Find Cars to Save
+                        </Link>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
 
-              {/* Recommendations */}
               <div ref={recommendationsRef}>
                 {activeTab === 'recommendations' && (
                   <>
@@ -980,7 +966,13 @@ const UserProfilePage = () => {
                                               headers: { Authorization: `Bearer ${user.token}` }
                                             });
                                             setFavorites([...favorites, car]);
+                                            setSnackbar({
+                                              open: true,
+                                              message: 'Car added to favorites!',
+                                              severity: 'success',
+                                            });
                                           } catch (error) {
+                                            console.error('Error adding favorite:', error);
                                             setError('Failed to add car to favorites.');
                                           }
                                         }}
@@ -997,7 +989,13 @@ const UserProfilePage = () => {
                                               headers: { Authorization: `Bearer ${user.token}` }
                                             });
                                             setRecommendations(recommendations.filter(r => r.car_id !== car.car_id));
+                                            setSnackbar({
+                                              open: true,
+                                              message: 'Recommendation dismissed!',
+                                              severity: 'success',
+                                            });
                                           } catch (error) {
+                                            console.error('Error dismissing recommendation:', error);
                                             setError('Failed to dismiss recommendation.');
                                           }
                                         }}
@@ -1032,26 +1030,27 @@ const UserProfilePage = () => {
           </div>
         </div>
       </div>
+
       <Snackbar
-  open={snackbar.open}
-  autoHideDuration={3000}
-  onClose={handleCloseSnackbar}
-  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
->
-  <Alert
-    onClose={handleCloseSnackbar}
-    severity={snackbar.severity}
-    sx={{
-      backgroundColor: snackbar.severity === 'success' ? '#ffca28' : '#d32f2f',
-      color: snackbar.severity === 'success' ? '#000' : '#fff',
-      '.MuiAlert-icon': {
-        color: snackbar.severity === 'success' ? '#000' : '#fff',
-      },
-    }}
-  >
-    {snackbar.message}
-  </Alert>
-</Snackbar>
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{
+            backgroundColor: snackbar.severity === 'success' ? '#ffca28' : '#d32f2f',
+            color: snackbar.severity === 'success' ? '#000' : '#fff',
+            '.MuiAlert-icon': {
+              color: snackbar.severity === 'success' ? '#000' : '#fff',
+            },
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

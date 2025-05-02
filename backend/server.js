@@ -28,7 +28,6 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);

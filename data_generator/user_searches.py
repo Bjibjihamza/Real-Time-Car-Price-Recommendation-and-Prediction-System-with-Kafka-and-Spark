@@ -38,10 +38,9 @@ except Exception as e:
     logger.error(f"Failed to fetch user_ids: {e}")
     raise
 
-# Select approximately half of the users
-num_users_to_process = max(1, len(all_user_ids) // 2)  # At least 1 user, roughly half
-user_ids = random.sample(all_user_ids, k=num_users_to_process)
-logger.info(f"Selected {len(user_ids)} users for search generation")
+# Use all user_ids (no random sampling)
+user_ids = all_user_ids
+logger.info(f"Processing searches for {len(user_ids)} users")
 
 # Fetch preferred_brands from user_preferences table
 try:
@@ -166,7 +165,7 @@ def insert_search(search):
         logger.error(f"Failed to insert search for user_id {search['user_id']}: {e}")
         raise
 
-# Main function to generate and insert one search for selected users
+# Main function to generate and insert one search for all users
 def main():
     try:
         for user_id in user_ids:

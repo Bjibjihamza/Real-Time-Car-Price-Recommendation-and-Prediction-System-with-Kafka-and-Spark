@@ -127,19 +127,13 @@ class Car {
       console.error('Invalid car id format in Car.getById:', id);
       return null;
     }
-
     try {
-      const query = `
-        SELECT *
-        FROM cars_keyspace.cleaned_cars
-        WHERE id = ?
-      `;
+      const query = 'SELECT * FROM cars_keyspace.cleaned_cars WHERE id = ?';
       const result = await client.execute(query, [id], { prepare: true });
       if (result.rows.length === 0) {
         console.log('No car found for id:', id);
         return null;
       }
-
       const car = result.rows[0];
       return {
         id: car.id.toString(),
@@ -160,9 +154,10 @@ class Car {
         first_owner: car.first_owner,
         fiscal_power: car.fiscal_power,
         image_folder: car.image_folder,
+        image_url: car.image_folder ? `/images/cars/${car.image_folder}/image_1.jpg` : '/images/cars/default/image_1.jpg',
         mileage: car.mileage,
         origin: car.origin,
-        source: car.source
+        source: car.source,
       };
     } catch (error) {
       console.error('Error in Car.getById:', error);
@@ -287,7 +282,7 @@ class Car {
     const total = result.rows.length;
     const cars = result.rows
       .slice(offset, offset + limit)
-      .map(car => ({
+      .map((car) => ({
         id: car.id.toString(),
         brand: car.brand,
         model: car.model,
@@ -306,6 +301,7 @@ class Car {
         first_owner: car.first_owner,
         fiscal_power: car.fiscal_power,
         image_folder: car.image_folder,
+        image_url: car.image_folder ? `/images/cars/${car.image_folder}/image_1.jpg` : '/images/cars/default/image_1.jpg',
         mileage: car.mileage,
         origin: car.origin,
         source: car.source,
