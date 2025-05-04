@@ -14,7 +14,18 @@ function Hero({ isAuthenticated, user, handleLogout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
+
+  // Track window size
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Handle scroll event to change navbar appearance
   useEffect(() => {
@@ -45,12 +56,14 @@ function Hero({ isAuthenticated, user, handleLogout }) {
     }
   };
 
+  const isSmallScreen = windowWidth < 1000;
+
   const heroStyle = {
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${bg})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    height: '100vh',
+    height: isSmallScreen ? '85vh' : '90vh',
     position: 'relative',
     overflow: 'hidden'
   };
@@ -65,7 +78,8 @@ function Hero({ isAuthenticated, user, handleLogout }) {
     borderRadius: '50%',
     backgroundColor: 'rgba(255, 234, 145, 0.1)',
     pointerEvents: 'none',
-    zIndex: 1
+    zIndex: 1,
+    display: isSmallScreen ? 'none' : 'block'
   };
 
   const carStyle = {
@@ -73,7 +87,8 @@ function Hero({ isAuthenticated, user, handleLogout }) {
     bottom: '-12vh',
     right: '0',
     zIndex: '10',
-    width: '55vw'
+    width: '55vw',
+    display: isSmallScreen ? 'none' : 'block'
   };
 
   // Determine navbar classes based on scroll position
@@ -86,7 +101,10 @@ function Hero({ isAuthenticated, user, handleLogout }) {
       {/* Custom Navbar directly in Hero component for homepage only */}
       <nav className={navbarClasses}>
         <div className="container">
-          <Link className="navbar-brand" to="/" style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>
+          <Link className="navbar-brand" to="/" style={{ 
+            fontSize: isSmallScreen ? '1.5rem' : '1.75rem', 
+            fontWeight: 'bold' 
+          }}>
             <span className={scrolled ? 'text-white' : 'text-white'}>Next</span>
             <span style={{ color: '#FFDD67' }}>Ride</span>
           </Link>
@@ -127,9 +145,11 @@ function Hero({ isAuthenticated, user, handleLogout }) {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  Rechercher
+                  Browsing
                 </Link>
               </li>
+
+              
               <li className="nav-item mx-2">
                 <Link
                   className="nav-link"
@@ -143,6 +163,20 @@ function Hero({ isAuthenticated, user, handleLogout }) {
                   Prédiction
                 </Link>
               </li>
+
+              <li className="nav-item mx-2">
+              <Link
+                  className="nav-link"
+                  to="/addcar"
+                  style={{
+                    color: 'white',
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                Ajouter Voiture
+              </Link>
+            </li>
               <li className="nav-item mx-2">
                 <Link
                   className="nav-link"
@@ -225,8 +259,15 @@ function Hero({ isAuthenticated, user, handleLogout }) {
         <div style={semicircleStyle}></div>
         
         <div className="row h-100 position-relative" style={{ zIndex: 2 }}>
-          <div className="col-md-6 d-flex flex-column justify-content-center ps-4 ps-md-5">
-            <h1 className="text-white display-4 w-75 mb-5" style={{ fontSize: '80px', fontWeight: '900' }}>
+          <div className={`col-md-${isSmallScreen ? '12' : '6'} d-flex flex-column justify-content-center ${isSmallScreen ? 'text-center px-4' : 'ps-4 ps-md-5'}`}>
+            <h1 
+              className="text-white mb-4" 
+              style={{ 
+                fontSize: isSmallScreen ? '2.5rem' : '80px', 
+                fontWeight: '900',
+                width: isSmallScreen ? '100%' : '75%'
+              }}
+            >
               FIND YOUR PERFECT CAR!
             </h1>
             <p
@@ -234,8 +275,8 @@ function Hero({ isAuthenticated, user, handleLogout }) {
               style={{
                 color: '#FFDD67',
                 fontWeight: '700',
-                width: '30vw',
-                marginBottom: '40px'
+                width: isSmallScreen ? '100%' : '30vw',
+                marginBottom: isSmallScreen ? '30px' : '40px'
               }}
             >
               Browse and get personalized car recommendations based on your preferences.
@@ -245,24 +286,29 @@ function Hero({ isAuthenticated, user, handleLogout }) {
               style={{
                 width: '100%',
                 display: 'flex',
-                alignItems: 'center'
+                alignItems: 'center',
+                justifyContent: isSmallScreen ? 'center' : 'flex-start'
               }}
             >
-              <form onSubmit={handleSearchSubmit} className="d-flex position-relative mb-4 w-75">
+              <form 
+                onSubmit={handleSearchSubmit} 
+                className="d-flex position-relative mb-4" 
+                style={{ width: isSmallScreen ? '90%' : '75%' }}
+              >
                 <input
                   type="text"
                   className="form-control form-control-lg rounded-pill py-3 ps-4 pe-5"
-                  placeholder="Search by brand, model, or keywords..."
+                  placeholder={isSmallScreen ? "Search cars..." : "Search by brand, model, or keywords..."}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-label="Search cars"
                 />
                 <button
                   className="btn btn-warning rounded-circle position-absolute end-0 top-50 translate-middle-y me-2"
-                  style={{ width: '50px', height: '50px' }}
+                  style={{ width: isSmallScreen ? '45px' : '50px', height: isSmallScreen ? '45px' : '50px' }}
                   type="submit"
                 >
-                  <CiSearch size={24} />
+                  <CiSearch size={isSmallScreen ? 20 : 24} />
                 </button>
               </form>
             </div>
@@ -270,13 +316,16 @@ function Hero({ isAuthenticated, user, handleLogout }) {
         </div>
       </section>
       
-      <div className="icons">
-        <img src={icon1} style={{ position: 'absolute', top: '25vh', left: '49vw' }} alt="Icon 1" />
-        <img src={icon2} style={{ position: 'absolute', top: '40vh', left: '53vw' }} alt="Icon 2" />
-        <img src={icon3} style={{ position: 'absolute', top: '55vh', left: '49vw' }} alt="Icon 3" />
-      </div>
-      
-      <img src={car} alt="Car" style={carStyle} />
+      {!isSmallScreen && (
+        <>
+          <div className="icons">
+            <img src={icon1} style={{ position: 'absolute', top: '25vh', left: '49vw' }} alt="Icon 1" />
+            <img src={icon2} style={{ position: 'absolute', top: '40vh', left: '53vw' }} alt="Icon 2" />
+            <img src={icon3} style={{ position: 'absolute', top: '55vh', left: '49vw' }} alt="Icon 3" />
+          </div>
+          <img src={car} alt="Car" style={carStyle} />
+        </>
+      )}
     </section>
   );
 }

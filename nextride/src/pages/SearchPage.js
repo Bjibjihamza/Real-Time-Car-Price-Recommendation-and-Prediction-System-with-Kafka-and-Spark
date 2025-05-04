@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { FaRegHeart, FaFilter, FaSortAmountDown } from 'react-icons/fa';
 import { FiShare2 } from 'react-icons/fi';
 import { MdOutlineArrowOutward } from 'react-icons/md';
 import { CiSearch } from 'react-icons/ci';
 import axios from 'axios';
-import carDefaultImage from '../assets/images/carannonceimage.png';
 
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,7 +18,6 @@ function SearchPage() {
   const [totalCars, setTotalCars] = useState(0);
   const limit = 10;
 
-  // Updated filters state to include sellerCity and sector
   const [filters, setFilters] = useState({
     brand: '',
     model: '',
@@ -37,6 +35,27 @@ function SearchPage() {
 
   const [sortOption, setSortOption] = useState('relevance');
 
+  const BASE_URL = 'http://localhost:5000';
+  const DEFAULT_IMAGE = `${BASE_URL}/images/cars/default/image_1.jpg`;
+  const PLACEHOLDER_IMAGE = `${BASE_URL}/images/cars/placeholder.jpg`;
+
+  const constructImageUrl = useCallback((car) => {
+    console.log('Constructing image URL for car:', car);
+    if (car.image_url && car.image_url.startsWith('http')) {
+      return car.image_url;
+    }
+    const folderName = car.image_folder || 
+      (car.title || `${car.brand || ''} ${car.model || ''}`.trim()).toLowerCase()
+        .replace(/[^a-zA-Z0-9\s]/g, '_')
+        .replace(/\s+/g, '_');
+    if (!car.image_folder) {
+      console.warn(`No image_folder found for car "${car.title || `${car.brand} ${car.model}`}", using fallback folder: ${folderName}`);
+    }
+    const imagePath = `/images/cars/${folderName}/image_1.jpg`;
+    console.log('Constructed image path:', imagePath);
+    return `${BASE_URL}${imagePath}`;
+  }, [BASE_URL]);
+
   const fetchCars = async (currentPage = 1) => {
     setLoading(true);
     setError('');
@@ -47,8 +66,9 @@ function SearchPage() {
 
       const requestBody = {
         userId: userId,
+        searchTerm: searchTerm || undefined,
         brand: filters.brand || undefined,
-        model: searchTerm || filters.model || undefined,
+        model: filters.model || undefined,
         minPrice: filters.minPrice || undefined,
         maxPrice: filters.maxPrice || undefined,
         minYear: filters.minYear || undefined,
@@ -62,9 +82,14 @@ function SearchPage() {
         limit: limit,
       };
 
-      const response = await axios.post('http://localhost:5000/api/search', requestBody);
+      const response = await axios.post('http://localhost:5000/api/search', requestBody, {
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-      let fetchedCars = response.data.cars || [];
+      let fetchedCars = (response.data.cars || []).map(car => ({
+        ...car,
+        imageSrc: constructImageUrl(car),
+      }));
 
       switch (sortOption) {
         case 'price-asc':
@@ -85,8 +110,8 @@ function SearchPage() {
 
       setCars(fetchedCars);
       setFilteredCars(fetchedCars);
-      setTotalCars(response.data.total || 0);
-      setPage(response.data.page || 1);
+      setTotalCars(response.data.total || fetchedCars.length);
+      setPage(currentPage);
       setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Error fetching cars. Please try again.');
@@ -95,13 +120,14 @@ function SearchPage() {
   };
 
   useEffect(() => {
-    fetchCars();
-  }, [searchParams, filters]);
+    fetchCars(page);
+  }, [searchParams, filters, sortOption, page]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setSearchParams({ q: searchTerm });
     setPage(1);
+    fetchCars(1);
   };
 
   const handleFilterChange = (e) => {
@@ -110,7 +136,6 @@ function SearchPage() {
       ...prev,
       [name]: value,
     }));
-    setPage(1);
   };
 
   const resetFilters = () => {
@@ -131,42 +156,32 @@ function SearchPage() {
     setSearchTerm('');
     setSearchParams({});
     setPage(1);
+    fetchCars(1);
   };
 
-  const getBrands = () => {
-    return [...new Set(cars.map((car) => car.brand))];
-  };
-
-  const getFuelTypes = () => {
-    return [...new Set(cars.map((car) => car.fuel_type))];
-  };
-
-  const getConditions = () => {
-    return [...new Set(cars.map((car) => car.condition))];
-  };
-
-  const getTransmissions = () => {
-    return [...new Set(cars.map((car) => car.transmission))];
-  };
-
-  const getDoorCounts = () => {
-    return [...new Set(cars.map((car) => car.door_count))].filter((count) => count !== null);
-  };
-
-  const getCities = () => {
-    return [...new Set(cars.map((car) => car.seller_city))];
-  };
-
-  const getSectors = () => {
-    return [...new Set(cars.map((car) => car.sector))].filter((sector) => sector !== null);
-  };
+  const getBrands = () => [...new Set(cars.map((car) => car.brand))];
+  const getFuelTypes = () => [...new Set(cars.map((car) => car.fuel_type))];
+  const getConditions = () => [...new Set(cars.map((car) => car.condition))];
+  const getTransmissions = () => [...new Set(cars.map((car) => car.transmission))];
+  const getDoorCounts = () => [...new Set(cars.map((car) => car.door_count))].filter((count) => count !== null);
+  const getCities = () => [...new Set(cars.map((car) => car.seller_city))];
+  const getSectors = () => [...new Set(cars.map((car) => car.sector))].filter((sector) => sector !== null);
 
   const totalPages = Math.ceil(totalCars / limit);
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
-      fetchCars(newPage);
     }
+  };
+
+  const handleImageError = (carId) => {
+    setFilteredCars((prevCars) =>
+      prevCars.map((car) =>
+        car.id === carId
+          ? { ...car, imageSrc: car.imageSrc !== DEFAULT_IMAGE ? DEFAULT_IMAGE : PLACEHOLDER_IMAGE }
+          : car
+      )
+    );
   };
 
   return (
@@ -212,7 +227,7 @@ function SearchPage() {
         <div className="d-flex align-items-center">
           <span className="me-2">Sort by:</span>
           <select
-            className="form-select form-select-sm rounded-pill"
+            className="form-select form-select-sm rounded-pill w-50"
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
           >
@@ -474,20 +489,39 @@ function SearchPage() {
                 >
                   {car.condition === 'New' && (
                     <span
-                      className="position-absolute top-1 start-0 text-white px-2 py-1 m-2 rounded-pill"
+                      className="position-absolute top-0 start-0 text-white px-2 py-1 m-2 rounded-pill"
                       style={{ backgroundColor: '#367209', fontWeight: '600', fontSize: '12px' }}
                     >
                       New
                     </span>
                   )}
 
-                  <img
-                    src={car.image_folder ? `/path-to-image/${car.image_folder}` : carDefaultImage}
-                    className="card-img-top p-3"
-                    alt={`${car.brand} ${car.model}`}
-                  />
+                  <div
+                    style={{
+                      position: 'relative',
+                      paddingTop: '75%', // 4:3 aspect ratio (height is 75% of width)
+                      backgroundColor: '#f5f5f5',
+                    }}
+                  >
+                    <img
+                      src={car.imageSrc}
+                      className="card-img-top"
+                      alt={`${car.brand} ${car.model}`}
+                      onError={() => handleImageError(car.id)}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderTopLeftRadius: '1rem',
+                        borderTopRightRadius: '1rem',
+                      }}
+                    />
+                  </div>
 
-                  <hr className="m-0 mt-3" />
+                  <hr className="m-0 mt-0" />
 
                   <div className="card-body">
                     <div className="d-flex justify-content-between align-items-start mb-2">
@@ -536,39 +570,95 @@ function SearchPage() {
           </div>
 
           {totalPages > 1 && (
-            <nav className="mt-5 d-flex justify-content-center">
-              <ul className="pagination">
-                <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(page - 1)}
-                  >
-                    Previous
-                  </button>
-                </li>
-                {[...Array(totalPages)].map((_, index) => (
-                  <li
-                    key={index + 1}
-                    className={`page-item ${page === index + 1 ? 'active' : ''}`}
-                  >
+            <div className="d-flex justify-content-center mt-5">
+              <nav aria-label="Page navigation">
+                <ul
+                  className="pagination"
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                  }}
+                >
+                  <li className={`page-item ${page === 1 ? 'disabled' : ''}`}>
                     <button
                       className="page-link"
-                      onClick={() => handlePageChange(index + 1)}
+                      onClick={() => handlePageChange(page - 1)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: page === 1 ? '#f0f0f0' : '#fff',
+                        color: page === 1 ? '#aaa' : '#1a1a1a',
+                        fontWeight: '500',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        cursor: page === 1 ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.3s ease, color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) =>
+                        page !== 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                      }
+                      onMouseLeave={(e) =>
+                        page !== 1 && (e.currentTarget.style.backgroundColor = '#fff')
+                      }
                     >
-                      {index + 1}
+                      Previous
                     </button>
                   </li>
-                ))}
-                <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
-                  <button
-                    className="page-link"
-                    onClick={() => handlePageChange(page + 1)}
-                  >
-                    Next
-                  </button>
-                </li>
-              </ul>
-            </nav>
+                  {[...Array(totalPages)].map((_, index) => (
+                    <li key={index + 1} className={`page-item ${page === index + 1 ? 'active' : ''}`}>
+                      <button
+                        className="page-link"
+                        onClick={() => handlePageChange(index + 1)}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: page === index + 1 ? '#ffc107' : '#fff',
+                          color: page === index + 1 ? '#fff' : '#1a1a1a',
+                          fontWeight: '500',
+                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                          transition: 'background-color 0.3s ease, color 0.3s ease',
+                        }}
+                        onMouseEnter={(e) =>
+                          page !== index + 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                        }
+                        onMouseLeave={(e) =>
+                          page !== index + 1 && (e.currentTarget.style.backgroundColor = '#fff')
+                        }
+                      >
+                        {index + 1}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(page + 1)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: page === totalPages ? '#f0f0f0' : '#fff',
+                        color: page === totalPages ? '#aaa' : '#1a1a1a',
+                        fontWeight: '500',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                        transition: 'background-color 0.3s ease, color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) =>
+                        page !== totalPages && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                      }
+                      onMouseLeave={(e) =>
+                        page !== totalPages && (e.currentTarget.style.backgroundColor = '#fff')
+                      }
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
           )}
         </>
       )}

@@ -6,6 +6,7 @@ exports.searchCars = async (req, res) => {
   try {
     const userId = req.body.userId || req.query.userId;
     const {
+      searchTerm,
       brand,
       model,
       minPrice,
@@ -23,6 +24,7 @@ exports.searchCars = async (req, res) => {
 
     // Prepare filters for the Car.search method
     const filters = {
+      searchTerm, // Add searchTerm to filters
       brand,
       model,
       minPrice: minPrice ? parseInt(minPrice) : undefined,
@@ -56,6 +58,7 @@ exports.searchCars = async (req, res) => {
         // Prepare a clean filters object for Cassandra (remove undefined/null values)
         const cleanFilters = Object.fromEntries(
           Object.entries({
+            searchTerm,
             brand,
             model,
             minPrice: minPrice ? parseInt(minPrice) : undefined,

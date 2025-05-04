@@ -19,7 +19,6 @@ function VehicleSection() {
   const BASE_URL = 'http://localhost:5000';
 
   const constructImageUrl = useCallback((vehicle) => {
-    console.log('Constructing image URL for vehicle:', vehicle);
     if (vehicle.image_url && vehicle.image_url.startsWith('http')) {
       return vehicle.image_url;
     }
@@ -35,7 +34,6 @@ function VehicleSection() {
       console.warn(`No image_folder found for vehicle "${vehicle.title || `${vehicle.brand} ${vehicle.model}`}", using fallback folder: ${folderName}`);
     }
     const imagePath = `/images/cars/${folderName}/image_1.jpg`;
-    console.log('Constructed image path:', imagePath);
     return `${BASE_URL}${imagePath}`;
   }, [BASE_URL]);
 

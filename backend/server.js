@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fs = require('fs'); // Add this line
 require('dotenv').config();
 
 const path = require('path');
@@ -11,8 +12,6 @@ const carRoutes = require('./routes/carRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const userRoutes = require('./routes/userRoutes');
 const predictionRoutes = require('./routes/predictionRoutes');
-
-
 
 // Initialize express app
 const app = express();
@@ -38,7 +37,6 @@ app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/prediction', predictionRoutes);
 app.use('/images', express.static(path.join(__dirname, 'images')));
-
 
 // Basic route for testing
 app.get('/', (req, res) => {

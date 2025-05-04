@@ -128,7 +128,7 @@ const VisualizationPage = () => {
         <svg ref={svgRef}></svg>
       </div>
       <p className="text-center mt-4 text-muted">
-        This chart shows the distribution of cars by brand in our database.
+        This chart shows the distribution of cars by brand in our databa
       </p>
     </div>
   );

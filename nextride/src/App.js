@@ -18,6 +18,7 @@ import VisualizationPage from './pages/VisualizationPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import AddCarPage from './pages/AddCarPage';
 
 function HomePage() {
   const { user, logout } = useAuth();
@@ -62,6 +63,8 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/car/:carId" element={<CarDetailsPage />} />
+          <Route path="/addcar" element={<AddCarPage />} />
+
           <Route
             path="/profile"
             element={

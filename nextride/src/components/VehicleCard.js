@@ -114,7 +114,6 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
               borderTopRightRadius: '12px',
               transition: 'transform 0.3s ease',
             }}
-            onLoad={() => console.log(`Image loaded for vehicle ${vehicle.id}: ${imageSrc}`)}
             onError={handleImageError}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}

@@ -95,7 +95,7 @@ const Navbar = () => {
                   transition: 'all 0.3s ease'
                 }}
               >
-                Rechercher
+                Browsing
               </Link>
             </li>
             <li className="nav-item mx-2">
@@ -111,6 +111,21 @@ const Navbar = () => {
                 }}
               >
                 Prédiction
+              </Link>
+            </li>
+            <li className="nav-item mx-2">
+              <Link
+                className={`nav-link ${location.pathname === '/addcar' ? 'active' : ''}`}
+                to="/addcar"
+                style={{
+                  color: location.pathname === '/addcar' 
+                    ? '#FFDD67' 
+                    : (isHomePage && !scrolled ? '#444444' : 'white'),
+                  fontWeight: '600',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Ajouter Voiture
               </Link>
             </li>
             <li className="nav-item mx-2">

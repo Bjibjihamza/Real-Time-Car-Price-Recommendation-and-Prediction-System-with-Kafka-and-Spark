@@ -251,16 +251,16 @@ function CarDetailsPage() {
               <h2 className="fw-bold mb-2">{car.title}</h2>
               <div className="d-flex mb-3">
                 <span className="badge bg-light text-dark me-2">
-                  <FaCalendarAlt className="me-1" /> {car.year}
+                  <FaCalendarAlt className="me-1" /> {car.year || 'N/A'}
                 </span>
                 <span className="badge bg-light text-dark me-2">
                   <FaTachometerAlt className="me-1" /> {(car.mileage || 0).toLocaleString()} km
                 </span>
                 <span className="badge bg-light text-dark me-2">
-                  <FaGasPump className="me-1" /> {car.fuel_type}
+                  <FaGasPump className="me-1" /> {car.fuel_type || 'N/A'}
                 </span>
                 <span className="badge bg-light text-dark">
-                  <FaDoorOpen className="me-1" /> {car.door_count} doors
+                  <FaDoorOpen className="me-1" /> {car.door_count || 'N/A'} doors
                 </span>
               </div>
 
@@ -275,7 +275,7 @@ function CarDetailsPage() {
 
               <div className="d-flex align-items-center mb-3">
                 <FaMapMarkerAlt className="text-muted me-2" />
-                <span>{car.seller_city}</span>
+                <span>{car.seller_city || 'N/A'}</span>
               </div>
 
               <div className="d-grid">
@@ -338,21 +338,21 @@ function CarDetailsPage() {
                 About this {car.brand} {car.model}
               </h5>
               <p>
-                This {car.year} {car.brand} {car.model} comes with {car.transmission} transmission and a{' '}
-                {car.fuel_type.toLowerCase()} engine. With {(car.mileage || 0).toLocaleString()} kilometers on the odometer,
-                this vehicle is in {car.condition.toLowerCase()} condition.
+                This {car.year || 'N/A'} {car.brand} {car.model} comes with {car.transmission} transmission and a{' '}
+                {(car.fuel_type || '').toLowerCase()} engine. With {(car.mileage || 0).toLocaleString()} kilometers on the odometer,
+                this vehicle is in {(car.condition || '').toLowerCase()} condition.
               </p>
               <p>
                 The vehicle is {car.first_owner === 'Yes' ? 'first-hand' : 'not first-hand'} and its origin is{' '}
-                {car.origin.toLowerCase()}. It was published on{' '}
+                {(car.origin || '').toLowerCase()}. It was published on{' '}
                 {car.publication_date
                   ? new Date(car.publication_date).toLocaleDateString()
                   : 'Unknown date'}
                 .
               </p>
               <p>
-                This {car.brand} {car.model} is listed by a {car.sector.toLowerCase()} seller located in{' '}
-                {car.seller_city}.
+                This {car.brand} {car.model} is listed by a {(car.sector || '').toLowerCase()} seller located in{' '}
+                {car.seller_city || 'N/A'}.
               </p>
             </div>
 
@@ -394,7 +394,7 @@ function CarDetailsPage() {
                       </tr>
                       <tr>
                         <th scope="row">Year</th>
-                        <td>{car.year}</td>
+                        <td>{car.year || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th scope="row">Mileage</th>
@@ -402,7 +402,7 @@ function CarDetailsPage() {
                       </tr>
                       <tr>
                         <th scope="row">Fuel Type</th>
-                        <td>{car.fuel_type}</td>
+                        <td>{car.fuel_type || 'N/A'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -412,23 +412,23 @@ function CarDetailsPage() {
                     <tbody>
                       <tr>
                         <th scope="row">Transmission</th>
-                        <td>{car.transmission}</td>
+                        <td>{car.transmission || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th scope="row">Door Count</th>
-                        <td>{car.door_count}</td>
+                        <td>{car.door_count || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th scope="row">Fiscal Power</th>
-                        <td>{car.fiscal_power} CV</td>
+                        <td>{car.fiscal_power || 'N/A'} CV</td>
                       </tr>
                       <tr>
                         <th scope="row">Condition</th>
-                        <td>{car.condition}</td>
+                        <td>{car.condition || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th scope="row">First Owner</th>
-                        <td>{car.first_owner}</td>
+                        <td>{car.first_owner || 'N/A'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -474,7 +474,7 @@ function CarDetailsPage() {
                   <div className="card-body">
                     <h5 className="card-title fw-bold mb-1">{similarCar.title}</h5>
                     <p className="card-text text-muted small mb-3">
-                      {similarCar.year} • {(similarCar.mileage || 0).toLocaleString()} km • {similarCar.fuel_type}
+                      {similarCar.year || 'N/A'} • {(similarCar.mileage || 0).toLocaleString()} km • {similarCar.fuel_type || 'N/A'}
                     </p>
                     <div className="d-flex justify-content-between align-items-center">
                       <span className="fw-bold">
