@@ -124,5 +124,3 @@ Deliver personalized vehicle recommendations in real time.
 
 Transforms vehicle listing data into actionable insights and personalized recommendations through robust automation and interactive visualizations.
 
-```
-```
