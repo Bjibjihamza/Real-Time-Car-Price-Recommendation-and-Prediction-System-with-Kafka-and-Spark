@@ -118,3 +118,104 @@ This guide explains how to set up the `cars_keyspace` database in Cassandra usin
     ```
     
 - Refer to this file for guidance during setup.
+
+
+
+
+
+
+
+# Apache Cassandra Setup Commands
+
+A step-by-step guide to install and configure Apache Cassandra 4.1.3 on Ubuntu.
+
+## 1. Java Installation
+
+```bash
+sudo apt update
+sudo apt install -y openjdk-8-jdk
+````
+
+## 2. Cassandra Setup
+
+```bash
+wget https://archive.apache.org/dist/cassandra/4.1.3/apache-cassandra-4.1.3-bin.tar.gz
+
+tar -xvzf apache-cassandra-4.1.3-bin.tar.gz
+```
+
+## 3. Environment Configuration
+
+1. Locate the installation directory (update path if needed):
+
+   ```bash
+   find ~/ -name "apache-cassandra*" -type d
+   ```
+
+2. Configure environment variables (replace `/path/to/` with the actual path):
+
+   ```bash
+   export CASSANDRA_HOME=/path/to/apache-cassandra-4.1.3
+   export PATH="$PATH:$CASSANDRA_HOME/bin"
+   ```
+
+## 4. Service Initialization
+
+```bash
+$CASSANDRA_HOME/bin/cassandra -R
+```
+
+> Use the `-R` flag to run Cassandra with elevated privileges.
+
+## 5. Verification
+
+```bash
+nodetool status
+```
+
+> Verify the node status with `nodetool status`.
+
+## 6. cqlsh Configuration
+
+### 6.1 Python Environment Setup
+
+```bash
+sudo apt install -y python3-venv python3-full
+python3 -m venv ~/cassandra-venv
+source ~/cassandra-venv/bin/activate
+```
+
+### 6.2 Dependency Installation
+
+```bash
+pip install six cassandra-driver
+
+```
+
+### 6.3 Driver Management
+
+Disable the internal-only driver to avoid conflicts:
+
+```bash
+mv $CASSANDRA_HOME/lib/cassandra-driver-internal-only-3.25.0.zip \
+   $CASSANDRA_HOME/lib/cassandra-driver-internal-only-3.25.0.zip.disabled
+```
+
+### 6.4 Launch cqlsh
+
+```bash
+$CASSANDRA_HOME/bin/cqlsh
+```
+
+---
+
+**Key Notes:**
+
+* Use `-R` flag when starting Cassandra to run under the Cassandra user with appropriate permissions.
+* Backslashes (`\`) indicate line continuation in bash commands.
+* Ensure you replace `/path/to/` with your actual Cassandra installation directory.
+* The Python virtual environment helps avoid dependency conflicts when using `cqlsh` and the Cassandra Python driver.
+
+```
+```
+
