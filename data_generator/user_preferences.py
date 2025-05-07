@@ -49,8 +49,10 @@ except Exception as e:
     raise
 
 def generate_user_preference(user_id):
-    budget_min = random.randint(20000, 100000)
-    budget_max = random.randint(budget_min + 10000, 500000)
+    # Generate budget_min and round to nearest 1000
+    budget_min = round(random.randint(20000, 100000) / 1000) * 1000
+    # Ensure budget_max is at least 10000 more than budget_min, then round
+    budget_max = round(random.randint(budget_min + 10000, 500000) / 1000) * 1000
 
     mileage_min = random.randint(0, 100000)
     mileage_max = random.randint(mileage_min + 10000, 300000)

@@ -109,7 +109,7 @@ const UserProfilePage = () => {
         const userData = userResponse.data.user;
         setUserData(userData);
         setFormData({ username: userData.username || '', email: userData.email || '', age: userData.age || '', location: userData.location || '' });
-
+    
         const preferencesResponse = await axios.get(`${BASE_URL}/api/users/preferences`, config);
         const preferencesData = preferencesResponse.data.preferences || {};
         const normalizedPreferences = {
@@ -125,10 +125,19 @@ const UserProfilePage = () => {
         };
         setPreferences(normalizedPreferences);
         setPreferencesData(normalizedPreferences);
-
+    
         const favoritesResponse = await axios.get(`${BASE_URL}/api/users/favorites`, config);
-        setFavorites(favoritesResponse.data.cars.map(car => ({ ...car, id: car.id || car.car_id, imageSrc: constructImageUrl(car), title: car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car' })));
-
+        // Remove duplicates by creating a unique array based on car.id
+        const uniqueFavorites = Array.from(
+          new Map(
+            favoritesResponse.data.cars.map(car => [
+              car.id || car.car_id, // Use the car's unique identifier
+              { ...car, id: car.id || car.car_id, imageSrc: constructImageUrl(car), title: car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car' }
+            ])
+          ).values()
+        );
+        setFavorites(uniqueFavorites);
+    
         const recommendationsResponse = await axios.get(`${BASE_URL}/api/users/recommendations`, config);
         setRecommendations(recommendationsResponse.data.cars.map(car => ({ ...car, car_id: car.car_id || car.id, imageSrc: constructImageUrl(car), name: car.name || car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car' })));
       } catch (error) {
@@ -872,6 +881,11 @@ const UserProfilePage = () => {
                             onSaveToggle={async (carId, shouldSave) => {
                               try {
                                 if (shouldSave) {
+                                  // Check if the car is already in favorites
+                                  if (favorites.some(fav => fav.id === carId)) {
+                                    setSnackbar({ open: true, message: 'Car is already in favorites!', severity: 'info' });
+                                    return;
+                                  }
                                   await axios.post(`${BASE_URL}/api/users/favorites`, { carId }, { headers: { Authorization: `Bearer ${user.token}` } });
                                   setFavorites([...favorites, car]);
                                   setSnackbar({ open: true, message: 'Car added to favorites!', severity: 'success' });
