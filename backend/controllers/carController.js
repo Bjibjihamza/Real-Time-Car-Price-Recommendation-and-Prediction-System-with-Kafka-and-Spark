@@ -308,3 +308,139 @@ exports.createCar = async (req, res) => {
     res.status(500).json({ message: 'Error creating car', error: error.message });
   }
 };
+
+exports.getCarsByBrand = async (req, res) => {
+  try {
+    const { yearMin, yearMax, fuelType } = req.query;
+    let query = 'SELECT brand, year, fuel_type FROM cars_keyspace.cleaned_cars';
+    const params = [];
+    const conditions = [];
+
+    const normalizedFuelType = fuelType && fuelType !== 'All' ? fuelType.toLowerCase() : null;
+
+    if (normalizedFuelType) {
+      conditions.push('fuel_type = ?');
+      params.push(normalizedFuelType);
+    }
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ') + ' ALLOW FILTERING';
+    }
+
+    console.log('Executing query:', query, 'with params:', params);
+    const result = await client.execute(query, params, { prepare: true });
+    console.log('Total rows fetched:', result.rows.length);
+
+    const minYear = yearMin ? parseInt(yearMin) : null;
+    const maxYear = yearMax ? parseInt(yearMax) : null;
+    console.log('Year filter: minYear=', minYear, 'maxYear=', maxYear);
+
+    if (minYear && maxYear && minYear > maxYear) {
+      return res.status(400).json({ message: 'yearMin cannot be greater than yearMax' });
+    }
+
+    const filteredRows = result.rows.filter(row => {
+      const year = row.year;
+      if (!minYear || !maxYear) return true;
+      const include = year !== null && year >= minYear && year <= maxYear;
+      console.log(`Row: brand=${row.brand}, year=${year}, include=${include}`);
+      return include;
+    });
+
+    console.log('Filtered rows:', filteredRows.length);
+
+    const brandCounts = {};
+    filteredRows.forEach(row => {
+      const brand = row.brand;
+      brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+    });
+
+    const data = Object.entries(brandCounts).map(([brand, count]) => ({
+      brand,
+      count
+    }));
+
+    data.sort((a, b) => b.count - a.count);
+
+    console.log('Final data:', data);
+    res.status(200).json({ data });
+  } catch (error) {
+    console.error('Error fetching cars by brand:', error);
+    res.status(500).json({ message: 'Error fetching brand distribution' });
+  }
+};
+
+// Get car data for bubble chart
+exports.getCarBubbles = async (req, res) => {
+  try {
+    const { yearMin, yearMax, maxPrice, fuelType } = req.query;
+    let query = 'SELECT brand, price, year, fuel_type FROM cars_keyspace.cleaned_cars';
+    const params = [];
+    const conditions = [];
+
+    const normalizedFuelType = fuelType && fuelType !== 'All' ? fuelType.toLowerCase() : null;
+    if (normalizedFuelType) {
+      conditions.push('fuel_type = ?');
+      params.push(normalizedFuelType);
+    }
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ') + ' ALLOW FILTERING';
+    }
+
+    console.log('Executing query:', query, 'with params:', params);
+    const result = await client.execute(query, params, { prepare: true });
+    console.log('Total rows fetched:', result.rows.length);
+
+    const minYear = yearMin ? parseInt(yearMin) : null;
+    const maxYear = yearMax ? parseInt(maxYear) : null;
+    const priceCap = maxPrice ? parseInt(maxPrice) : 10000000; // Default: 10M MAD
+    console.log('Filters: minYear=', minYear, 'maxYear=', maxYear, 'maxPrice=', priceCap, 'fuelType=', normalizedFuelType);
+
+    if (minYear && maxYear && minYear > maxYear) {
+      return res.status(400).json({ message: 'yearMin cannot be greater than yearMax' });
+    }
+
+    // Compute brand popularity (frequency)
+    const brandCounts = {};
+    result.rows.forEach(row => {
+      const brand = row.brand;
+      brandCounts[brand] = (brandCounts[brand] || 0) + 1;
+    });
+
+    // Filter rows in memory
+    const filteredRows = result.rows.filter(row => {
+      const year = row.year;
+      const price = row.price;
+      const fuel = row.fuel_type ? row.fuel_type.toLowerCase() : null;
+      const yearInclude = (!minYear || !maxYear) ? true : (year !== null && year >= minYear && year <= maxYear);
+      const priceInclude = price !== null && price > 0 && price <= priceCap;
+      const fuelInclude = !normalizedFuelType || fuel === normalizedFuelType;
+      const include = yearInclude && priceInclude && fuelInclude;
+      console.log(`Row: brand=${row.brand}, year=${year}, price=${price}, fuel_type=${fuel}, include=${include}`);
+      return include;
+    });
+
+    console.log('Filtered rows:', filteredRows.length);
+    if (filteredRows.length === 0) {
+      console.log('No rows match the filters');
+      return res.status(200).json({ data: [], message: 'No cars match the selected filters' });
+    }
+
+    // Format data with popularity
+    const data = filteredRows.map(row => ({
+      brand: row.brand,
+      price: row.price,
+      year: row.year,
+      fuel_type: row.fuel_type.toLowerCase(),
+      popularity: brandCounts[row.brand] || 1
+    }));
+
+    console.log('Final data:', data);
+    res.status(200).json({ data });
+  } catch (error) {
+    console.error('Error fetching car bubbles:', error);
+    res.status(500).json({ message: 'Error fetching car bubble data' });
+  }
+
+
+
+};

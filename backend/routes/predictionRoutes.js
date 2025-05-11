@@ -8,4 +8,5 @@ router.post('/', predictionController.predictPrice);
 // Get user's prediction history
 router.get('/history', predictionController.getPredictionHistory);
 
+
 module.exports = router;

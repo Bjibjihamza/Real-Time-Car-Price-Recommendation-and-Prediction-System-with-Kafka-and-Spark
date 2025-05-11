@@ -1,83 +1,47 @@
-from cassandra.cluster import Cluster
+import pandas as pd
+import json
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Define the path to the CSV file
+csv_path = os.path.join(os.path.dirname(__file__), 'cleaned_data.csv')
 
-# Create a Cassandra client
-cluster = Cluster(
-    contact_points=[os.getenv('CASSANDRA_CONTACT_POINT', 'localhost')],
-    port=9042  # Default Cassandra port, adjust if needed
-)
-session = cluster.connect(os.getenv('CASSANDRA_KEYSPACE', 'cars_keyspace'))
+# Check if the CSV file exists
+if not os.path.exists(csv_path):
+    raise FileNotFoundError(f"CSV file not found at {csv_path}")
 
-def extract_unique_values_to_txt():
-    try:
-        # Query to select all records from cleaned_cars
-        query = "SELECT brand, fuel_type, transmission, sector FROM cleaned_cars"
-        rows = session.execute(query)
+# Read the CSV file into a DataFrame
+df = pd.read_csv(csv_path)
 
-        # Extract unique values using sets
-        brands = set()
-        fuel_types = set()
-        transmissions = set()
-        sectors = set()
+# Initialize dictionary to store unique labels
+labels = {}
 
-        for row in rows:
-            brands.add(row.brand or '')  # Handle null values
-            fuel_types.add(row.fuel_type or '')
-            transmissions.add(row.transmission or '')
-            sectors.add(row.sector or '')
+# Columns to extract unique values from
+columns = [
+    'brand', 'condition', 'door_count', 'first_owner', 'fiscal_power',
+    'fuel_type', 'model', 'origin', 'sector', 'seller_city', 'transmission', 'year'
+]
 
-        # Remove empty string if present and sort for readability
-        brands = sorted([b for b in brands if b], key=str.lower)
-        fuel_types = sorted([f for f in fuel_types if f], key=str.lower)
-        transmissions = sorted([t for t in transmissions if t], key=str.lower)
-        sectors = sorted([s for s in sectors if s], key=str.lower)
+# Extract unique values for each column
+for col in columns:
+    # Drop NaN values and convert to strings for consistency
+    unique_values = df[col].dropna().astype(str).unique().tolist()
+    # Sort values for better UX in dropdowns
+    unique_values = sorted(unique_values, key=lambda x: x.lower() if isinstance(x, str) else x)
+    labels[col] = unique_values
 
-        # Prepare text content for the .txt file
-        txt_content = "Unique Car Attributes Extracted from Database\n"
-        txt_content += "=" * 50 + "\n\n"
+# Special handling for equipment column
+equipment_set = set()
+for equip in df['equipment'].dropna():
+    # Split equipment string into individual items
+    items = [item.strip() for item in equip.split(',')]
+    equipment_set.update(items)
 
-        # Brands section
-        txt_content += "Brands:\n"
-        txt_content += "-" * 20 + "\n"
-        for brand in brands:
-            txt_content += f"{brand}\n"
-        txt_content += "\n"
+# Convert equipment set to sorted list
+labels['equipment'] = sorted(list(equipment_set))
 
-        # Fuel Types section
-        txt_content += "Fuel Types:\n"
-        txt_content += "-" * 20 + "\n"
-        for fuel in fuel_types:
-            txt_content += f"{fuel}\n"
-        txt_content += "\n"
+# Save labels to a JSON file in the same directory
+output_path = os.path.join(os.path.dirname(__file__), 'labels.json')
+with open(output_path, 'w', encoding='utf-8') as f:
+    json.dump(labels, f, indent=2, ensure_ascii=False)
 
-        # Transmissions section
-        txt_content += "Transmissions:\n"
-        txt_content += "-" * 20 + "\n"
-        for transmission in transmissions:
-            txt_content += f"{transmission}\n"
-        txt_content += "\n"
-
-        # Sectors section
-        txt_content += "Sectors:\n"
-        txt_content += "-" * 20 + "\n"
-        for sector in sectors:
-            txt_content += f"{sector}\n"
-
-        # Write to text file
-        with open('unique_car_attributes.txt', 'w', encoding='utf-8') as f:
-            f.write(txt_content)
-        print("Unique values have been exported to unique_car_attributes.txt")
-
-    except Exception as err:
-        print(f"Error: {err}")
-    finally:
-        # Close the connection
-        cluster.shutdown()
-        print("Cassandra connection closed")
-
-# Run the function
-extract_unique_values_to_txt()
+print(f"Labels extracted and saved to {output_path}")

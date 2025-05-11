@@ -13,5 +13,6 @@ router.get('/favorites', userController.getFavorites);
 router.post('/favorites', userController.addFavorite);
 router.delete('/favorites', userController.removeFavorite);
 router.get('/recommendations', userController.getRecommendations);
+router.get('/recommendations/generate', userController.generateRecommendations);
 
 module.exports = router;

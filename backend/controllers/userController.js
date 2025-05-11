@@ -1,12 +1,15 @@
 const User = require('../models/User');
 const UserPreference = require('../models/UserPreference');
-const Car = require('../models/Car'); // Assuming a Car model exists
+const Car = require('../models/Car');
 const { validate: isUUID } = require('uuid');
 const client = require('../config/db');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 exports.getUser = async (req, res) => {
   try {
-    const userId = req.userId; // Use the userId from authMiddleware
+    const userId = req.userId;
     if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
     if (!isUUID(userId)) return res.status(400).json({ message: 'Invalid User ID format' });
 
@@ -29,7 +32,6 @@ exports.getUser = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving user' });
   }
 };
-
 
 exports.updateUser = async (req, res) => {
   try {
@@ -67,7 +69,7 @@ exports.getPreferences = async (req, res) => {
 
 exports.updatePreferences = async (req, res) => {
   try {
-    const userId = req.userId; // Use userId from JWT token
+    const userId = req.userId;
     if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
     if (!isUUID(userId)) return res.status(400).json({ message: 'Invalid User ID format' });
 
@@ -83,7 +85,6 @@ exports.updatePreferences = async (req, res) => {
       preferred_door_count
     } = req.body;
 
-    // Validate payload
     if (!Array.isArray(preferred_brands) ||
         !Array.isArray(preferred_fuel_types) ||
         !Array.isArray(preferred_transmissions) ||
@@ -171,7 +172,7 @@ exports.getRecommendations = async (req, res) => {
 
     console.log('Querying user_recommendations for userId:', userId);
     const query = `
-      SELECT car_id, recommendation_score, recommendation_reason
+      SELECT car_id, similarity_score, recommendation_reason
       FROM cars_keyspace.user_recommendations
       WHERE user_id = ?
       LIMIT 20
@@ -188,7 +189,7 @@ exports.getRecommendations = async (req, res) => {
         console.log('Found car:', car.title);
         cars.push({
           ...car,
-          recommendation_score: (row.recommendation_score * 100).toFixed(0),
+          recommendation_score: (row.similarity_score * 100).toFixed(0),
           recommendation_reason: row.recommendation_reason || 'Precomputed recommendation'
         });
       } else {
@@ -201,5 +202,69 @@ exports.getRecommendations = async (req, res) => {
   } catch (error) {
     console.error('Error in getRecommendations:', error);
     res.status(500).json({ message: 'Error retrieving recommendations' });
+  }
+};
+
+exports.generateRecommendations = async (req, res) => {
+  try {
+    const userId = req.userId;
+    console.log('Generating recommendations for userId:', userId);
+
+    if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
+    if (!isUUID(userId)) return res.status(400).json({ message: 'Invalid User ID format' });
+
+    // Path to the Python script
+    const pythonScriptPath = './scripts/combined_recommendations.py';
+    
+    // Execute the Python script
+    const command = `python3 ${pythonScriptPath} ${userId}`;
+    console.log('Executing command:', command);
+
+    try {
+      const { stdout, stderr } = await execPromise(command);
+      if (stderr) {
+        console.error('Python script stderr:', stderr);
+        if (stderr.includes('Error')) {
+          throw new Error('Python script execution failed');
+        }
+      }
+      console.log('Python script output:', stdout);
+
+      // Fetch the newly generated recommendations
+      const query = `
+        SELECT car_id, similarity_score, recommendation_reason
+        FROM cars_keyspace.user_recommendations
+        WHERE user_id = ?
+        LIMIT 20
+      `;
+      const result = await client.execute(query, [userId], { prepare: true });
+      console.log('Fetched recommendations:', result.rows.length);
+
+      const cars = [];
+      for (const row of result.rows) {
+        const carId = row.car_id.toString();
+        console.log('Fetching car details for carId:', carId);
+        const car = await Car.getById(carId);
+        if (car) {
+          console.log('Found car:', car.title);
+          cars.push({
+            ...car,
+            recommendation_score: (row.similarity_score * 100).toFixed(0),
+            recommendation_reason: row.recommendation_reason || 'Precomputed recommendation'
+          });
+        } else {
+          console.warn(`Skipping recommendation for non-existent car ID: ${carId}`);
+        }
+      }
+
+      console.log('Returning cars:', cars.length);
+      res.status(200).json({ message: 'Recommendations generated successfully', cars });
+    } catch (pythonError) {
+      console.error('Error executing Python script:', pythonError);
+      return res.status(500).json({ message: 'Error generating recommendations', error: pythonError.message });
+    }
+  } catch (error) {
+    console.error('Error in generateRecommendations:', error);
+    res.status(500).json({ message: 'Error generating recommendations' });
   }
 };

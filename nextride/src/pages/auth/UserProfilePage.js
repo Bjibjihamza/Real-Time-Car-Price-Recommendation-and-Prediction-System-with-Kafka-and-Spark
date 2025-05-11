@@ -78,6 +78,26 @@ const UserProfilePage = () => {
     return `${BASE_URL}${imagePath}`;
   };
 
+  const parseDate = (dateStr) => {
+    if (!dateStr) return null;
+    try {
+      if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}$/)) {
+        const [datePart, timePart] = dateStr.split(' ');
+        const [day, month, year] = datePart.split('/').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes);
+      }
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/)) {
+        return new Date(dateStr);
+      }
+      console.warn(`Unrecognized date format: ${dateStr}`);
+      return null;
+    } catch (error) {
+      console.error(`Error parsing date ${dateStr}:`, error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
@@ -109,7 +129,7 @@ const UserProfilePage = () => {
         const userData = userResponse.data.user;
         setUserData(userData);
         setFormData({ username: userData.username || '', email: userData.email || '', age: userData.age || '', location: userData.location || '' });
-    
+
         const preferencesResponse = await axios.get(`${BASE_URL}/api/users/preferences`, config);
         const preferencesData = preferencesResponse.data.preferences || {};
         const normalizedPreferences = {
@@ -125,19 +145,18 @@ const UserProfilePage = () => {
         };
         setPreferences(normalizedPreferences);
         setPreferencesData(normalizedPreferences);
-    
+
         const favoritesResponse = await axios.get(`${BASE_URL}/api/users/favorites`, config);
-        // Remove duplicates by creating a unique array based on car.id
         const uniqueFavorites = Array.from(
           new Map(
             favoritesResponse.data.cars.map(car => [
-              car.id || car.car_id, // Use the car's unique identifier
+              car.id || car.car_id,
               { ...car, id: car.id || car.car_id, imageSrc: constructImageUrl(car), title: car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car' }
             ])
           ).values()
         );
         setFavorites(uniqueFavorites);
-    
+
         const recommendationsResponse = await axios.get(`${BASE_URL}/api/users/recommendations`, config);
         setRecommendations(recommendationsResponse.data.cars.map(car => ({ ...car, car_id: car.car_id || car.id, imageSrc: constructImageUrl(car), name: car.name || car.title || `${car.brand || ''} ${car.model || ''}`.trim() || 'Unknown Car' })));
       } catch (error) {
@@ -251,7 +270,9 @@ const UserProfilePage = () => {
 
   const CarCard = ({ car, isFavorite, onSaveToggle, onDismiss }) => {
     const [imageSrc, setImageSrc] = useState(car.imageSrc || PLACEHOLDER_IMAGE);
-    const isInFavorites = favorites.some(fav => fav.id === (car.id || car.car_id));
+    const isInFavorites = favorites.some(fav => fav.id === (car.car_id || car.id));
+    const parsedDate = parseDate(car.publication_date);
+    const isNew = parsedDate ? new Date() - parsedDate < 7 * 24 * 60 * 60 * 1000 : false;
 
     const handleImageError = (e) => {
       const currentSrc = e.target.src;
@@ -274,9 +295,14 @@ const UserProfilePage = () => {
               onError={handleImageError}
               loading="lazy"
             />
-            <span className="position-absolute top-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 rounded-bottom-end w-100 " style={{ fontSize: '0.85rem' }}>
+            <span className="position-absolute top-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 rounded-bottom-end w-100" style={{ fontSize: '0.85rem' }}>
               {car.price ? `${car.price.toLocaleString()} MAD` : 'Price N/A'}
             </span>
+            {isNew && (
+              <span className="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 rounded-bottom-start" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+                New
+              </span>
+            )}
           </div>
           <div className="col-8 d-flex flex-column">
             <div className="card-body p-3 d-flex flex-column justify-content-between">
@@ -286,16 +312,21 @@ const UserProfilePage = () => {
                   <button
                     className="btn btn-sm p-0 border-0"
                     style={{ color: isInFavorites ? '#dc3545' : '#6c757d' }}
-                    onClick={() => onSaveToggle(car.car_id, !isInFavorites)}
+                    onClick={() => onSaveToggle(car.car_id || car.id, !isInFavorites)}
                   >
                     <FaHeart size={16} />
                   </button>
                 </div>
-                <p className="text-muted small mb-3">{car.year ? `${car.year} • ${car.fuel_type || 'N/A'}` : 'N/A'}</p>
+                <p className="text-muted small mb-2">{car.year ? `${car.year} • ${car.fuel_type || 'N/A'}` : 'N/A'}</p>
+                {car.recommendation_reason && (
+                  <p className="text-muted small mb-3" style={{ fontSize: '0.85rem' }}>
+                    {car.recommendation_reason}
+                  </p>
+                )}
               </div>
               <div className="d-grid gap-2">
                 <Link
-                  to={`/car/${car.id || car.car_id}`}
+                  to={`/car/${car.car_id || car.id}`}
                   className="btn btn-warning btn-sm w-100"
                 >
                   View Details
@@ -303,7 +334,7 @@ const UserProfilePage = () => {
                 {onDismiss && (
                   <button
                     className="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center"
-                    onClick={() => onDismiss(car.car_id)}
+                    onClick={() => onDismiss(car.car_id || car.id)}
                   >
                     <FaTimes className="me-1" /> Not Interested
                   </button>
@@ -832,10 +863,14 @@ const UserProfilePage = () => {
                             isFavorite
                             onSaveToggle={async (carId) => {
                               try {
-                                await axios.delete(`${BASE_URL}/api/users/favorites`, { headers: { Authorization: `Bearer ${user.token}` }, data: { userId: user.userId, carId } });
+                                await axios.delete(`${BASE_URL}/api/users/favorites`, {
+                                  headers: { Authorization: `Bearer ${user.token}` },
+                                  data: { userId: user.userId, carId }
+                                });
                                 setFavorites(favorites.filter(f => f.id !== carId));
                                 setSnackbar({ open: true, message: 'Car removed from favorites!', severity: 'success' });
                               } catch (error) {
+                                console.error(`Error removing favorite car ${carId}:`, error.response?.data || error.message);
                                 setError(error.response?.data?.message || 'Failed to remove favorite.');
                               }
                             }}
@@ -877,34 +912,39 @@ const UserProfilePage = () => {
                         <div key={car.car_id} className="col">
                           <CarCard
                             car={car}
-                            isFavorite={favorites.some(fav => fav.id === (car.id || car.car_id))}
+                            isFavorite={favorites.some(fav => fav.id === (car.car_id || car.id))}
                             onSaveToggle={async (carId, shouldSave) => {
                               try {
+                                console.log('J\'adore button clicked:', { carId, shouldSave, userId: user.userId });
                                 if (shouldSave) {
-                                  // Check if the car is already in favorites
-                                  if (favorites.some(fav => fav.id === carId)) {
-                                    setSnackbar({ open: true, message: 'Car is already in favorites!', severity: 'info' });
-                                    return;
-                                  }
-                                  await axios.post(`${BASE_URL}/api/users/favorites`, { carId }, { headers: { Authorization: `Bearer ${user.token}` } });
-                                  setFavorites([...favorites, car]);
+                                  await axios.post(`${BASE_URL}/api/users/favorites`, { carId }, {
+                                    headers: { Authorization: `Bearer ${user.token}` }
+                                  });
+                                  setFavorites([...favorites, { ...car, id: carId }]);
                                   setSnackbar({ open: true, message: 'Car added to favorites!', severity: 'success' });
                                 } else {
-                                  await axios.delete(`${BASE_URL}/api/users/favorites`, { headers: { Authorization: `Bearer ${user.token}` }, data: { userId: user.userId, carId } });
+                                  await axios.delete(`${BASE_URL}/api/users/favorites`, {
+                                    headers: { Authorization: `Bearer ${user.token}` },
+                                    data: { userId: user.userId, carId }
+                                  });
                                   setFavorites(favorites.filter(f => f.id !== carId));
                                   setSnackbar({ open: true, message: 'Car removed from favorites!', severity: 'success' });
                                 }
                               } catch (error) {
-                                setError('Failed to update favorites.');
+                                console.error(`Error toggling favorite car ${carId}:`, error.response?.data || error.message);
+                                setError(error.response?.data?.message || 'Failed to update favorite.');
                               }
                             }}
                             onDismiss={async (carId) => {
                               try {
-                                await axios.post(`${BASE_URL}/api/users/recommendations/dismiss`, { carId }, { headers: { Authorization: `Bearer ${user.token}` } });
+                                await axios.post(`${BASE_URL}/api/users/recommendations/dismiss`, { carId }, {
+                                  headers: { Authorization: `Bearer ${user.token}` }
+                                });
                                 setRecommendations(recommendations.filter(r => r.car_id !== carId));
                                 setSnackbar({ open: true, message: 'Recommendation dismissed!', severity: 'success' });
                               } catch (error) {
-                                setError('Failed to dismiss recommendation.');
+                                console.error(`Error dismissing car ${carId}:`, error.response?.data || error.message);
+                                setError(error.response?.data?.message || 'Failed to dismiss recommendation.');
                               }
                             }}
                           />
@@ -936,7 +976,6 @@ const UserProfilePage = () => {
         </Alert>
       </Snackbar>
       <style>{`
-
         .btn-warning {
           background-color: #ffca28 !important;
           border-color: #ffca28 !important;

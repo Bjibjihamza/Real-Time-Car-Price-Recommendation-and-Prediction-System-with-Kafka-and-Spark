@@ -25,7 +25,6 @@ function VehicleSection() {
     if (vehicle.image && vehicle.image.startsWith('http')) {
       return vehicle.image;
     }
-    // Use image_folder directly from the database
     const folderName = vehicle.image_folder || 
       (vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim()).toLowerCase()
         .replace(/[^a-zA-Z0-9\s]/g, '_')
@@ -53,21 +52,14 @@ function VehicleSection() {
       setTotalPages(Math.ceil(allCarsResponse.data.total / limit) || 1);
 
       if (user) {
-        const [recommendedResponse, favoritesResponse] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/recommendations', config),
+        const [favoritesResponse] = await Promise.all([
           axios.get('http://localhost:5000/api/users/favorites', config),
         ]);
-        const recommended = (recommendedResponse.data.cars || []).map(vehicle => ({
-          ...vehicle,
-          imageSrc: constructImageUrl(vehicle),
-          title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
-        }));
         const favoriteCars = (favoritesResponse.data.cars || []).map(vehicle => ({
           ...vehicle,
           imageSrc: constructImageUrl(vehicle),
           title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
         }));
-        setRecommendedVehicles(recommended);
         setFavorites(favoriteCars);
       } else {
         setRecommendedVehicles([]);
@@ -84,6 +76,27 @@ function VehicleSection() {
       setIsLoading(false);
     }
   }, [user, page, constructImageUrl]);
+
+  const fetchRecommendations = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const recommendedResponse = await axios.get('http://localhost:5000/api/users/recommendations/generate', config);
+      const recommended = (recommendedResponse.data.cars || []).map(vehicle => ({
+        ...vehicle,
+        imageSrc: constructImageUrl(vehicle),
+        title: vehicle.title || `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'Unknown Vehicle',
+      }));
+      setRecommendedVehicles(recommended);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error.response?.data || error.message);
+      setError('Failed to load recommendations. Please try again later.');
+      setRecommendedVehicles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, constructImageUrl]);
 
   useEffect(() => {
     fetchData();
@@ -126,6 +139,9 @@ function VehicleSection() {
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     setPage(1);
+    if (tab === 'recommended' && user) {
+      fetchRecommendations();
+    }
   };
 
   const handlePageChange = (newPage) => {
@@ -140,10 +156,24 @@ function VehicleSection() {
 
   const parseDate = (dateStr) => {
     if (!dateStr) return null;
-    const [datePart, timePart] = dateStr.split(' ');
-    const [day, month, year] = datePart.split('/').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
-    return new Date(year, month - 1, day, hours, minutes);
+    try {
+      // Handle DD/MM/YYYY HH:MM format
+      if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}$/)) {
+        const [datePart, timePart] = dateStr.split(' ');
+        const [day, month, year] = datePart.split('/').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        return new Date(year, month - 1, day, hours, minutes);
+      }
+      // Handle YYYY-MM-DD HH:MM:SS format
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/)) {
+        return new Date(dateStr);
+      }
+      console.warn(`Unrecognized date format: ${dateStr}`);
+      return null;
+    } catch (error) {
+      console.error(`Error parsing date ${dateStr}:`, error);
+      return null;
+    }
   };
 
   const displayedVehicles = useMemo(
@@ -379,7 +409,7 @@ function VehicleSection() {
                       color: page === index + 1 ? '#fff' : '#1a1a1a',
                       fontWeight: '500',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      transition: 'background-color 0.3s ease, color 0.3s ease',
+                      transition: 'background-color 0.3s ease, color 0s ease',
                     }}
                     onMouseEnter={(e) =>
                       page !== index + 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
