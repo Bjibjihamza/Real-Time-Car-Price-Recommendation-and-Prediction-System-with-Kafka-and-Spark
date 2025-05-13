@@ -4,7 +4,8 @@ from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
-from datetime import datetime, UTC
+from datetime import datetime
+from pytz import UTC
 import uuid
 import logging
 

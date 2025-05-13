@@ -41,7 +41,6 @@ const SignupPage = () => {
           throw new Error('Failed to fetch labels');
         }
         const data = await response.json();
-        console.log('Loaded brands:', data.brands); // Debug: Log brands
         setLabels(data);
       } catch (err) {
         setError('Error loading options. Please try again later.');

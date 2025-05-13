@@ -1,105 +1,67 @@
 import pandas as pd
 import json
-import re
-from pathlib import Path
+import numpy as np
 
-# Define the path to the CSV file and output JSON file
-csv_file = "cleaned_data.csv"
-output_json = "public/labels.json"
+# Load the CSV file
+csv_file = 'cleaned_data.csv'
+df = pd.read_csv(csv_file)
 
-# Define the equipment options to extract
-equipment_options = [
-    'jantes_aluminium', 'airbags', 'climatisation', 'système_de_navigation_gps',
-    'toit_ouvrant', 'sièges_cuir', 'radar_de_recul', 'caméra_de_recul',
-    'vitres_électriques', 'abs', 'esp', 'régulateur_de_vitesse',
-    'limiteur_de_vitesse', 'cd_mp3_bluetooth', 'ordinateur_de_bord',
-    'verrouillage_centralisé'
+# Function to clean and get unique values, handling NaN and converting to strings
+def get_unique_values(column):
+    values = df[column].replace(np.nan, '').astype(str)
+    unique_values = sorted(set(values[values != '']))
+    return unique_values
+
+# Define the allowed equipment list from the image
+allowed_equipment = [
+    "Abs",
+    "Airbags",
+    "Caméra De Recul",
+    "Climatisation",
+    "Esp",
+    "Jantes Aluminium",
+    "Limiteur De Vitesse",
+    "Ordinateur De Bord",
+    "Radar De Recul",
+    "Régulateur De Vitesse",
+    "Sièges Cuir",
+    "Toit Ouvrant",
+    "Verrouillage Centralisé",
+    "Vitres Électriques"
 ]
 
-def normalize_text(text):
-    """Normalize text by converting to lowercase and removing special characters."""
-    if pd.isna(text):
-        return None
-    text = str(text).lower().strip()
-    text = re.sub(r'[^\w\s]', '-', text)  # Replace special chars with hyphen
-    text = re.sub(r'\s+', ' ', text)      # Replace multiple spaces with single space
-    return text
+# Function to clean equipment and get only allowed equipment items
+def get_unique_equipment():
+    # Combine all equipment entries, split by commas, and clean
+    equipment_list = df['equipment'].replace(np.nan, '').str.split(',').explode()
+    # Clean each item: remove leading/trailing spaces and normalize
+    equipment_list = equipment_list.str.strip().replace('', np.nan).dropna()
+    # Filter to only include allowed equipment
+    filtered_equipment = [eq for eq in equipment_list if eq in allowed_equipment]
+    # Get unique equipment items and sort
+    unique_equipment = sorted(set(filtered_equipment))
+    return unique_equipment
 
-def parse_equipment(equipment):
-    """Parse equipment string and return a set of valid equipment options."""
-    if pd.isna(equipment) or not equipment:
-        return set()
-    equipment = equipment.lower()
-    found_options = set()
-    for option in equipment_options:
-        # Check if option is present in the equipment string
-        if option.replace('_', ' ') in equipment or option in equipment:
-            found_options.add(option)
-    return found_options
+# Define the labels structure
+labels = {
+    'brand': get_unique_values('brand'),
+    'condition': get_unique_values('condition'),
+    'door_count': get_unique_values('door_count'),
+    'equipment': get_unique_equipment(),
+    'first_owner': get_unique_values('first_owner'),
+    'fiscal_power': get_unique_values('fiscal_power'),
+    'fuel_type': get_unique_values('fuel_type'),
+    'model': get_unique_values('model'),
+    'origin': get_unique_values('origin'),
+    'sector': get_unique_values('sector'),
+    'seller_city': get_unique_values('seller_city'),
+    'transmission': get_unique_values('transmission'),
+    'year': get_unique_values('year')
+}
 
-def main():
-    # Read the CSV file
-    try:
-        df = pd.read_csv(csv_file)
-    except FileNotFoundError:
-        print(f"Error: {csv_file} not found.")
-        return
+# Save the labels to a JSON file
+output_file = 'labels_p.json'
+with open(output_file, 'w', encoding='utf-8') as f:
+    json.dump(labels, f, ensure_ascii=False, indent=4)
 
-    # Initialize sets to store unique values
-    brands = set()
-    fuel_types = set()
-    transmissions = set()
-    cities = set()
-    all_equipment = set()
-
-    # Process brands
-    for brand in df['brand']:
-        normalized = normalize_text(brand)
-        if normalized and normalized != 'nan':
-            # Handle common brand variations
-            normalized = normalized.replace('alfa-romeo', 'alfa romeo').replace('aston-martin', 'aston martin')
-            brands.add(normalized.title())  # Capitalize first letter of each word
-
-    # Process fuel types
-    for fuel in df['fuel_type']:
-        normalized = normalize_text(fuel)
-        if normalized and normalized != 'nan':
-            fuel_types.add(normalized.capitalize())
-
-    # Process transmissions
-    for transmission in df['transmission']:
-        normalized = normalize_text(transmission)
-        if normalized and normalized != 'nan':
-            transmissions.add(normalized.capitalize())
-
-    # Process cities from sector column
-    for city in df['sector']:
-        normalized = normalize_text(city)
-        if normalized and normalized != 'nan':
-            cities.add(normalized.title())
-
-    # Process equipment
-    for equipment in df['equipment']:
-        options = parse_equipment(equipment)
-        all_equipment.update(options)
-
-    # Prepare the JSON structure
-    labels = {
-        "brands": sorted(list(brands)),
-        "fuel_types": sorted(list(fuel_types)),
-        "transmissions": sorted(list(transmissions)),
-        "cities": sorted(list(cities)),
-        "equipment": sorted(list(all_equipment))
-    }
-
-    # Ensure output directory exists
-    Path(output_json).parent.mkdir(parents=True, exist_ok=True)
-
-    # Write to JSON file
-    with open(output_json, 'w', encoding='utf-8') as f:
-        json.dump(labels, f, indent=2, ensure_ascii=False)
-
-    print(f"Successfully generated {output_json}")
-
-if __name__ == "__main__":
-    main()
+print(f"Generated {output_file} successfully.")

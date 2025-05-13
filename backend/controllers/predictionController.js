@@ -48,11 +48,8 @@ exports.predictPrice = async (req, res) => {
       return res.status(500).json({ message: 'Error generating price prediction', error: mlError.message });
     }
 
-    // Convert all car_features values to strings for Cassandra
-    const carFeatures = {};
-    for (const [key, value] of Object.entries(req.body)) {
-      carFeatures[key] = String(value);
-    }
+    // Convert car_features to a JSON string for Cassandra
+    const carFeatures = JSON.stringify(req.body);
 
     // Store prediction in Cassandra
     const predictionId = uuidv4();

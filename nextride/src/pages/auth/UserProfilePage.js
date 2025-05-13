@@ -61,7 +61,6 @@ const UserProfilePage = () => {
           throw new Error('Failed to fetch labels');
         }
         const data = await response.json();
-        console.log('Loaded labels:', data);
         setLabels(prev => ({
           ...prev,
           brands: data.brands || [],
@@ -934,7 +933,6 @@ const UserProfilePage = () => {
                             isFavorite={favorites.some(fav => fav.id === (car.car_id || car.id))}
                             onSaveToggle={async (carId, shouldSave) => {
                               try {
-                                console.log('J\'adore button clicked:', { carId, shouldSave, userId: user.userId });
                                 if (shouldSave) {
                                   await axios.post(`${BASE_URL}/api/users/favorites`, { carId }, {
                                     headers: { Authorization: `Bearer ${user.token}` }

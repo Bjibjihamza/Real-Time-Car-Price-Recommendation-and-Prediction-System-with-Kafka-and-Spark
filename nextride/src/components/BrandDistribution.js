@@ -22,7 +22,6 @@ const BrandDistribution = () => {
         setLoading(false);
         return;
       }
-      console.log('Fetching data with yearRange:', yearRange, 'fuelType:', fuelType);
       try {
         const response = await axios.get('http://localhost:5000/api/cars/brands', {
           params: {
@@ -31,7 +30,6 @@ const BrandDistribution = () => {
             fuelType: fuelType === 'All' ? '' : fuelType.toLowerCase()
           }
         });
-        console.log('API response:', response.data);
         setData(response.data.data);
         setError(null);
       } catch (err) {

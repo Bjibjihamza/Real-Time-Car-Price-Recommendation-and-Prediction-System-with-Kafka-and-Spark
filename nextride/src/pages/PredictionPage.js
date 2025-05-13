@@ -11,7 +11,22 @@ const PredictionPage = () => {
     brand: [],
     condition: [],
     door_count: [],
-    equipment: [],
+    equipment: [
+      "Abs",
+      "Airbags",
+      "Caméra De Recul",
+      "Climatisation",
+      "Esp",
+      "Jantes Aluminium",
+      "Limiteur De Vitesse",
+      "Ordinateur De Bord",
+      "Radar De Recul",
+      "Régulateur De Vitesse",
+      "Sièges Cuir",
+      "Toit Ouvrant",
+      "Verrouillage Centralisé",
+      "Vitres Électriques"
+    ],
     first_owner: [],
     fiscal_power: [],
     fuel_type: [],
@@ -68,7 +83,26 @@ const PredictionPage = () => {
     fetch('/labels_p.json')
       .then(response => response.json())
       .then(data => {
-        setLabels(data);
+        // Merge the hardcoded equipment with other labels from JSON
+        setLabels(prevLabels => ({
+          ...data,
+          equipment: [
+            "Abs",
+            "Airbags",
+            "Caméra De Recul",
+            "Climatisation",
+            "Esp",
+            "Jantes Aluminium",
+            "Limiteur De Vitesse",
+            "Ordinateur De Bord",
+            "Radar De Recul",
+            "Régulateur De Vitesse",
+            "Sièges Cuir",
+            "Toit Ouvrant",
+            "Verrouillage Centralisé",
+            "Vitres Électriques"
+          ]
+        }));
         setIsLabelsLoading(false);
       })
       .catch(error => {

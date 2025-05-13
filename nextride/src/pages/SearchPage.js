@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { FaRegHeart, FaFilter, FaSortAmountDown } from 'react-icons/fa';
+import { FaRegHeart, FaHeart, FaFilter, FaSortAmountDown } from 'react-icons/fa';
 import { FiShare2 } from 'react-icons/fi';
 import { MdOutlineArrowOutward } from 'react-icons/md';
 import { CiSearch } from 'react-icons/ci';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 function SearchPage() {
+  const { user } = useAuth(); // Get user from AuthContext
   const [searchParams, setSearchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,6 +18,7 @@ function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [totalCars, setTotalCars] = useState(0);
+  const [favorites, setFavorites] = useState([]); // Track favorite car IDs
   const limit = 10;
 
   const [filters, setFilters] = useState({
@@ -39,33 +42,80 @@ function SearchPage() {
   const DEFAULT_IMAGE = `${BASE_URL}/images/cars/default/image_1.jpg`;
   const PLACEHOLDER_IMAGE = `${BASE_URL}/images/cars/placeholder.jpg`;
 
-  const constructImageUrl = useCallback((car) => {
-    console.log('Constructing image URL for car:', car);
-    if (car.image_url && car.image_url.startsWith('http')) {
-      return car.image_url;
+  // Fetch user's favorite cars
+  const fetchFavorites = async () => {
+    if (!user) return;
+    try {
+      const response = await axios.get('http://localhost:5000/api/users/favorites', {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const favoriteCarIds = response.data.cars.map((car) => car.id);
+      setFavorites(favoriteCarIds);
+    } catch (err) {
+      console.error('Error fetching favorites:', err);
     }
-    const folderName = car.image_folder || 
-      (car.title || `${car.brand || ''} ${car.model || ''}`.trim()).toLowerCase()
-        .replace(/[^a-zA-Z0-9\s]/g, '_')
-        .replace(/\s+/g, '_');
-    if (!car.image_folder) {
-      console.warn(`No image_folder found for car "${car.title || `${car.brand} ${car.model}`}", using fallback folder: ${folderName}`);
+  };
+
+  // Toggle favorite status
+  const toggleFavorite = async (carId, isFavorited) => {
+    if (!user) {
+      setError('Please log in to add favorites');
+      return;
     }
-    const imagePath = `/images/cars/${folderName}/image_1.jpg`;
-    console.log('Constructed image path:', imagePath);
-    return `${BASE_URL}${imagePath}`;
-  }, [BASE_URL]);
+
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await axios.delete('http://localhost:5000/api/users/favorites', {
+          headers: { Authorization: `Bearer ${user.token}` },
+          data: { carId },
+        });
+        setFavorites((prev) => prev.filter((id) => id !== carId));
+      } else {
+        // Add to favorites
+        await axios.post(
+          'http://localhost:5000/api/users/favorites',
+          { carId },
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
+        setFavorites((prev) => [...prev, carId]);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error toggling favorite');
+    }
+  };
+
+  const constructImageUrl = useCallback(
+    (car) => {
+      if (car.image_url && car.image_url.startsWith('http')) {
+        return car.image_url;
+      }
+      const folderName =
+        car.image_folder ||
+        (car.title || `${car.brand || ''} ${car.model || ''}`.trim())
+          .toLowerCase()
+          .replace(/[^a-zA-Z0-9\s]/g, '_')
+          .replace(/\s+/g, '_');
+      if (!car.image_folder) {
+        console.warn(
+          `No image_folder found for car "${car.title || `${car.brand} ${car.model}`}", using fallback folder: ${folderName}`
+        );
+      }
+      const imagePath = `/images/cars/${folderName}/image_1.jpg`;
+      return `${BASE_URL}${imagePath}`;
+    },
+    [BASE_URL]
+  );
 
   const fetchCars = async (currentPage = 1) => {
     setLoading(true);
     setError('');
 
     try {
-      const user = JSON.parse(localStorage.getItem('carUser'));
       const userId = user?.id || null;
 
       const requestBody = {
-        userId: userId,
+        userId,
         searchTerm: searchTerm || undefined,
         brand: filters.brand || undefined,
         model: filters.model || undefined,
@@ -79,14 +129,14 @@ function SearchPage() {
         sellerCity: filters.sellerCity || undefined,
         sector: filters.sector || undefined,
         page: currentPage,
-        limit: limit,
+        limit,
       };
 
       const response = await axios.post('http://localhost:5000/api/search', requestBody, {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      let fetchedCars = (response.data.cars || []).map(car => ({
+      let fetchedCars = (response.data.cars || []).map((car) => ({
         ...car,
         imageSrc: constructImageUrl(car),
       }));
@@ -120,8 +170,9 @@ function SearchPage() {
   };
 
   useEffect(() => {
+    fetchFavorites(); // Fetch favorites when component mounts or user changes
     fetchCars(page);
-  }, [searchParams, filters, sortOption, page]);
+  }, [searchParams, filters, sortOption, page, user]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -214,7 +265,7 @@ function SearchPage() {
         </div>
       )}
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb symmetrize-4">
         <div>
           <button
             className="btn btn-outline-secondary rounded-pill d-flex align-items-center"
@@ -541,8 +592,15 @@ function SearchPage() {
                         </p>
                       </div>
                       <div className="d-flex">
-                        <button className="btn btn-light btn-sm p-1">
-                          <FaRegHeart className="text-muted" />
+                        <button
+                          className="btn btn-light btn-sm p-1"
+                          onClick={() => toggleFavorite(car.id, favorites.includes(car.id))}
+                        >
+                          {favorites.includes(car.id) ? (
+                            <FaHeart className="text-danger" />
+                          ) : (
+                            <FaRegHeart className="text-muted" />
+                          )}
                         </button>
                         <button className="btn btn-light btn-sm p-1 ms-1">
                           <FiShare2 className="text-muted" />

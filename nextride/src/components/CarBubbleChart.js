@@ -25,7 +25,6 @@ const CarBubbleChart = () => {
         setLoading(false);
         return;
       }
-      console.log('Fetching data with yearRange:', yearRange, 'maxPrice:', maxPrice, 'fuelType:', fuelType);
       try {
         const response = await axios.get('http://localhost:5000/api/cars/bubbles', {
           params: {

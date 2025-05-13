@@ -52,7 +52,6 @@ const VehicleCard = ({ vehicle, isSaved, onSaveToggle }) => {
   }, [vehicle.imageSrc]);
 
   if (!shouldRender) {
-    console.log(`Card not rendered for vehicle ${vehicle.id} due to image failure`);
     return null;
   }
 
