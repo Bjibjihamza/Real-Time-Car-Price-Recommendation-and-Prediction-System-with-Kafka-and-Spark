@@ -28,6 +28,14 @@ const UserProfilePage = () => {
     preferred_years: [],
     preferred_door_count: [],
   });
+  const [labels, setLabels] = useState({
+    brands: [],
+    fuel_types: [],
+    transmissions: [],
+    cities: [],
+    years: [...Array(2025 - 1950 + 1).keys()].map(i => 1950 + i),
+    door_counts: [3, 5, 7],
+  });
   const [error, setError] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
@@ -36,39 +44,38 @@ const UserProfilePage = () => {
   const favoritesRef = useRef(null);
   const recommendationsRef = useRef(null);
 
-  const brands = [
-    'Abarth', 'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'BYD', 'Cadillac',
-    'Chana', 'Changan', 'Changhe', 'Chery', 'Chevrolet', 'Chrysler', 'Citroën', 'Cupra',
-    'Dacia', 'Daewoo', 'Daihatsu', 'DFSK', 'Dodge', 'DS', 'FAW', 'Ferrari', 'Fiat',
-    'Ford', 'Foton', 'GAZ', 'Geely', 'GMC', 'GME', 'Great Wall', 'GWM Motors', 'Hafei',
-    'Honda', 'Hummer', 'Hyundai', 'Infiniti', 'Isuzu', 'Iveco', 'Jaguar', 'Jeep', 'Kia',
-    'KTM', 'Lada', 'Lamborghini', 'Lancia', 'Land Rover', 'Lexus', 'Lifan', 'Lincoln',
-    'Mahindra', 'Maserati', 'Mazda', 'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi',
-    'Nissan', 'Opel', 'Peugeot', 'Polaris', 'Porsche', 'Renault', 'Rolls-Royce',
-    'Rover', 'Seat', 'Simca', 'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki',
-    'Tata', 'Toyota', 'Volkswagen', 'Volvo', 'Zotye'
-  ];
-  const fuelTypes = ['Diesel', 'Essence', 'Hybride'];
-  const transmissions = ['Manuelle', 'Automatique'];
-  const cities = [
-    'Agadir', 'Ait Melloul', 'Al Hoceima', 'Asilah', 'Azrou', 'Beni Mellal',
-    'Berkane', 'Berrechid', 'Casablanca', 'Chefchaouen', 'Dakhla', 'El Jadida',
-    'Errachidia', 'Essaouira', 'Fès', 'Fnideq', 'Guelmim', 'Ifrane', 'Kenitra',
-    'Khemisset', 'Khenifra', 'Khouribga', 'Laayoune', 'Larache', 'Marrakech',
-    'Meknès', 'Mohammedia', 'Nador', 'Ouarzazate', 'Oujda', 'Rabat', 'Safi',
-    'Salé', 'Settat', 'Sidi Kacem', 'Tanger', 'Taounate', 'Taroudant', 'Taza',
-    'Temara', 'Tétouan', 'Tiznit', 'Youssoufia', 'Zagora'
-  ];
-  const years = [...Array(2025 - 1950 + 1).keys()].map(i => 1950 + i);
-  const doorCounts = [3, 5, 7];
-
-  const brandMap = Object.fromEntries(brands.map(b => [b.toLowerCase(), b]));
-  const fuelMap = Object.fromEntries(fuelTypes.map(f => [f.toLowerCase(), f]));
-  const transmissionMap = Object.fromEntries(transmissions.map(t => [t.toLowerCase(), t]));
+  const brandMap = Object.fromEntries(labels.brands.map(b => [b.toLowerCase(), b]));
+  const fuelMap = Object.fromEntries(labels.fuel_types.map(f => [f.toLowerCase(), f]));
+  const transmissionMap = Object.fromEntries(labels.transmissions.map(t => [t.toLowerCase(), t]));
 
   const DEFAULT_IMAGE = '/images/cars/default/image_1.jpg';
   const PLACEHOLDER_IMAGE = '/images/cars/placeholder.jpg';
   const BASE_URL = 'http://localhost:5000';
+
+  // Fetch labels from labels.json
+  useEffect(() => {
+    const fetchLabels = async () => {
+      try {
+        const response = await fetch('/labels.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch labels');
+        }
+        const data = await response.json();
+        console.log('Loaded labels:', data);
+        setLabels(prev => ({
+          ...prev,
+          brands: data.brands || [],
+          fuel_types: data.fuel_types || [],
+          transmissions: data.transmissions || [],
+          cities: data.cities || [],
+        }));
+      } catch (err) {
+        setError('Error loading options. Please try again later.');
+        console.error('Error fetching labels:', err);
+      }
+    };
+    fetchLabels();
+  }, []);
 
   const constructImageUrl = (car) => {
     if (car.image_url && car.image_url.startsWith('http')) return car.image_url;
@@ -133,15 +140,15 @@ const UserProfilePage = () => {
         const preferencesResponse = await axios.get(`${BASE_URL}/api/users/preferences`, config);
         const preferencesData = preferencesResponse.data.preferences || {};
         const normalizedPreferences = {
-          preferred_brands: (preferencesData.preferred_brands || []).map(brand => brandMap[brand.toLowerCase()] || brand).filter(brand => brands.includes(brand)),
-          preferred_fuel_types: (preferencesData.preferred_fuel_types || []).map(fuel => fuelMap[fuel.toLowerCase()] || fuel).filter(fuel => fuelTypes.includes(fuel)),
-          preferred_transmissions: (preferencesData.preferred_transmissions || []).map(trans => transmissionMap[trans.toLowerCase()] || trans).filter(trans => transmissions.includes(trans)),
+          preferred_brands: (preferencesData.preferred_brands || []).map(brand => brandMap[brand.toLowerCase()] || brand).filter(brand => labels.brands.includes(brand)),
+          preferred_fuel_types: (preferencesData.preferred_fuel_types || []).map(fuel => fuelMap[fuel.toLowerCase()] || fuel).filter(fuel => labels.fuel_types.includes(fuel)),
+          preferred_transmissions: (preferencesData.preferred_transmissions || []).map(trans => transmissionMap[trans.toLowerCase()] || trans).filter(trans => labels.transmissions.includes(trans)),
           budget_min: preferencesData.budget_min || '',
           budget_max: preferencesData.budget_max || '',
           mileage_min: preferencesData.mileage_min || '',
           mileage_max: preferencesData.mileage_max || '',
-          preferred_years: (preferencesData.preferred_years || []).filter(year => years.includes(year)),
-          preferred_door_count: (preferencesData.preferred_door_count || []).filter(doors => doorCounts.includes(doors)),
+          preferred_years: (preferencesData.preferred_years || []).filter(year => labels.years.includes(year)),
+          preferred_door_count: (preferencesData.preferred_door_count || []).filter(doors => labels.door_counts.includes(doors)),
         };
         setPreferences(normalizedPreferences);
         setPreferencesData(normalizedPreferences);
@@ -172,7 +179,7 @@ const UserProfilePage = () => {
     };
 
     if (!loading && user) fetchUserData();
-  }, [user, loading, navigate, location.search, logout]);
+  }, [user, loading, navigate, location.search, logout, labels.brands, labels.fuel_types, labels.transmissions]);
 
   const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -296,7 +303,7 @@ const UserProfilePage = () => {
               loading="lazy"
             />
             <span className="position-absolute top-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 rounded-bottom-end w-100" style={{ fontSize: '0.85rem' }}>
-              {car.price ? `${car.price.toLocaleString()} MAD` : 'Price N/A'}
+              {car.price ? `${car.price.toLocaleString()} DH` : 'Price N/A'}
             </span>
             {isNew && (
               <span className="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 rounded-bottom-start" style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
@@ -526,7 +533,7 @@ const UserProfilePage = () => {
                             onChange={handleInputChange}
                           >
                             <option value="">Select your city</option>
-                            {cities.map(city => <option key={city} value={city}>{city}</option>)}
+                            {labels.cities.map(city => <option key={city} value={city}>{city}</option>)}
                           </select>
                         </div>
                       )}
@@ -580,18 +587,18 @@ const UserProfilePage = () => {
                       </div>
                     ) : (
                       <div className="row row-cols-2 row-cols-md-3 g-2">
-                        {brands.map(brand => (
+                        {labels.brands.map(brand => (
                           <div key={brand} className="col">
                             <div className="form-check">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
-                                id={`brand-${brand}`}
+                                id={`brand-${brand.replace(/[^a-zA-Z0-9]/g, '')}`}
                                 name={`preferred_brands-${brand}`}
                                 checked={preferencesData.preferred_brands.includes(brand)}
                                 onChange={handlePreferenceChange}
                               />
-                              <label className="form-check-label" htmlFor={`brand-${brand}`}>
+                              <label className="form-check-label" htmlFor={`brand-${brand.replace(/[^a-zA-Z0-9]/g, '')}`}>
                                 {brand}
                               </label>
                             </div>
@@ -616,7 +623,7 @@ const UserProfilePage = () => {
                       </div>
                     ) : (
                       <div className="row row-cols-2 row-cols-md-3 g-2">
-                        {fuelTypes.map(fuel => (
+                        {labels.fuel_types.map(fuel => (
                           <div key={fuel} className="col">
                             <div className="form-check">
                               <input
@@ -652,7 +659,7 @@ const UserProfilePage = () => {
                       </div>
                     ) : (
                       <div className="row row-cols-2 g-2">
-                        {transmissions.map(transmission => (
+                        {labels.transmissions.map(transmission => (
                           <div key={transmission} className="col">
                             <div className="form-check">
                               <input
@@ -681,11 +688,11 @@ const UserProfilePage = () => {
                             <div className="d-flex justify-content-between">
                               <div>
                                 <p className="text-muted mb-1">Minimum</p>
-                                <h5>{preferences.budget_min ? `${preferences.budget_min.toLocaleString()} MAD` : 'Not specified'}</h5>
+                                <h5>{preferences.budget_min ? `${preferences.budget_min.toLocaleString()} DH` : 'Not specified'}</h5>
                               </div>
                               <div>
                                 <p className="text-muted mb-1">Maximum</p>
-                                <h5>{preferences.budget_max ? `${preferences.budget_max.toLocaleString()} MAD` : 'Not specified'}</h5>
+                                <h5>{preferences.budget_max ? `${preferences.budget_max.toLocaleString()} DH` : 'Not specified'}</h5>
                               </div>
                             </div>
                           </div>
@@ -693,30 +700,36 @@ const UserProfilePage = () => {
                       ) : (
                         <div className="row">
                           <div className="col-md-6">
-                            <label htmlFor="budget_min" className="form-label">Min (MAD)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              id="budget_min"
-                              name="budget_min"
-                              placeholder="Minimum"
-                              value={preferencesData.budget_min}
-                              onChange={handlePreferenceChange}
-                              min="0"
-                            />
+                            <label htmlFor="budget_min" className="form-label">Min (DH)</label>
+                            <div className="input-group">
+                              <span className="input-group-text bg-light">DH</span>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="budget_min"
+                                name="budget_min"
+                                placeholder="Minimum"
+                                value={preferencesData.budget_min}
+                                onChange={handlePreferenceChange}
+                                min="0"
+                              />
+                            </div>
                           </div>
                           <div className="col-md-6">
-                            <label htmlFor="budget_max" className="form-label">Max (MAD)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              id="budget_max"
-                              name="budget_max"
-                              placeholder="Maximum"
-                              value={preferencesData.budget_max}
-                              onChange={handlePreferenceChange}
-                              min="0"
-                            />
+                            <label htmlFor="budget_max" className="form-label">Max (DH)</label>
+                            <div className="input-group">
+                              <span className="input-group-text bg-light">DH</span>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="budget_max"
+                                name="budget_max"
+                                placeholder="Maximum"
+                                value={preferencesData.budget_max}
+                                onChange={handlePreferenceChange}
+                                min="0"
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -742,29 +755,35 @@ const UserProfilePage = () => {
                         <div className="row">
                           <div className="col-md-6">
                             <label htmlFor="mileage_min" className="form-label">Min (km)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              id="mileage_min"
-                              name="mileage_min"
-                              placeholder="Minimum"
-                              value={preferencesData.mileage_min}
-                              onChange={handlePreferenceChange}
-                              min="0"
-                            />
+                            <div className="input-group">
+                              <span className="input-group-text bg-light">km</span>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="mileage_min"
+                                name="mileage_min"
+                                placeholder="Minimum"
+                                value={preferencesData.mileage_min}
+                                onChange={handlePreferenceChange}
+                                min="0"
+                              />
+                            </div>
                           </div>
                           <div className="col-md-6">
                             <label htmlFor="mileage_max" className="form-label">Max (km)</label>
-                            <input
-                              type="number"
-                              className="form-control"
-                              id="mileage_max"
-                              name="mileage_max"
-                              placeholder="Maximum"
-                              value={preferencesData.mileage_max}
-                              onChange={handlePreferenceChange}
-                              min="0"
-                            />
+                            <div className="input-group">
+                              <span className="input-group-text bg-light">km</span>
+                              <input
+                                type="number"
+                                className="form-control"
+                                id="mileage_max"
+                                name="mileage_max"
+                                placeholder="Maximum"
+                                value={preferencesData.mileage_max}
+                                onChange={handlePreferenceChange}
+                                min="0"
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -786,7 +805,7 @@ const UserProfilePage = () => {
                       </div>
                     ) : (
                       <div className="row row-cols-2 row-cols-md-3 g-2">
-                        {years.map(year => (
+                        {labels.years.map(year => (
                           <div key={year} className="col">
                             <div className="form-check">
                               <input
@@ -822,7 +841,7 @@ const UserProfilePage = () => {
                       </div>
                     ) : (
                       <div className="row row-cols-2 g-2">
-                        {doorCounts.map(doors => (
+                        {labels.door_counts.map(doors => (
                           <div key={doors} className="col">
                             <div className="form-check">
                               <input

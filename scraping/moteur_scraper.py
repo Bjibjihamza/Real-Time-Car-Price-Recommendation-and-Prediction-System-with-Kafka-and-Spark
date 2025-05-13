@@ -18,7 +18,7 @@ from kafka import KafkaProducer
 
 # Configuration des répertoires
 DATA_DIR = "../data/moteur"
-IMAGES_DIR = os.path.join(DATA_DIR, "images")
+IMAGES_DIR = os.path.join("..", "backend", "images", "cars")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 
@@ -290,7 +290,7 @@ def scrape_detail_page(driver, url, ad_id, title, price, idx):
             "Date de publication": datetime.now().strftime("%Y-%m-%d"),
             "Type de carburant": "N/A",
             "Transmission": "N/A",
-            "Créateur": "N/A",
+            "Créateur": "N/A" ,
             "Secteur": "N/A",
             "Kilométrage": "N/A",
             "Marque": "N/A",
@@ -311,7 +311,7 @@ def main():
     kafka_producer = setup_kafka_producer()
     try:
         print("\n📋 Récupération des annonces de la page 1...")
-        listings_data = scrape_listings_page(driver, 1)
+        listings_data = scrape_listings_page(driver, 55)
         if not listings_data:
             print("❌ Aucune annonce trouvée. Arrêt du programme.")
             driver.quit()

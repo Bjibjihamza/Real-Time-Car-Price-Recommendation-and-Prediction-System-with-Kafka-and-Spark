@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timezone, timedelta
 from cassandra.cluster import Cluster, ExecutionProfile
 from cassandra.policies import DCAwareRoundRobinPolicy
 from cassandra.query import SimpleStatement
@@ -165,14 +165,14 @@ def get_car_ids_for_preferences(prefs):
 def generate_car_view(user_id, preferences):
     # Generate view date (within the last 30 days)
     days_ago = random.randint(0, 30)
-    view_date = (datetime.now(UTC) - timedelta(days=days_ago)).date()
+    view_date = (datetime.now(timezone.utc) - timedelta(days=days_ago)).date()
     
     # Generate view timestamp (random time on the view date)
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
     view_timestamp = datetime.combine(view_date, datetime.min.time()).replace(
-        hour=random_hour, minute=random_minute, second=random_second, tzinfo=UTC
+        hour=random_hour, minute=random_minute, second=random_second, tzinfo=timezone.utc
     )
     
     # Get car_ids matching preferences
@@ -200,10 +200,10 @@ def insert_car_view(car_view):
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         session.execute(query, (
-            str(car_view['user_id']),
+            car_view['user_id'],  # UUID, not string
             car_view['view_date'],
             car_view['view_timestamp'],
-            str(car_view['car_id']),
+            car_view['car_id'],  # UUID, not string
             car_view['view_duration_seconds'],
             car_view['view_source']
         ))

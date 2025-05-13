@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from cassandra.cluster import Cluster, ExecutionProfile
 from cassandra.policies import DCAwareRoundRobinPolicy
 from cassandra.query import SimpleStatement
@@ -72,7 +72,7 @@ def generate_user_preference(user_id):
         'mileage_min': mileage_min,
         'mileage_max': mileage_max,
         'preferred_years': preferred_years,
-        'last_updated': datetime.now(UTC)
+        'last_updated': datetime.now(timezone.utc)
     }
     return preference
 

@@ -70,6 +70,8 @@ exports.getPreferences = async (req, res) => {
 exports.updatePreferences = async (req, res) => {
   try {
     const userId = req.userId;
+    console.log('Updating preferences for userId:', userId, 'with data:', req.body);
+
     if (!userId) return res.status(401).json({ message: 'User ID not found in token' });
     if (!isUUID(userId)) return res.status(400).json({ message: 'Invalid User ID format' });
 
@@ -90,6 +92,13 @@ exports.updatePreferences = async (req, res) => {
         !Array.isArray(preferred_transmissions) ||
         !Array.isArray(preferred_years) ||
         !Array.isArray(preferred_door_count)) {
+      console.error('Validation failed: Array fields must be arrays', {
+        preferred_brands: typeof preferred_brands,
+        preferred_fuel_types: typeof preferred_fuel_types,
+        preferred_transmissions: typeof preferred_transmissions,
+        preferred_years: typeof preferred_years,
+        preferred_door_count: typeof preferred_door_count
+      });
       return res.status(400).json({ message: 'Array fields must be arrays' });
     }
 
@@ -105,9 +114,11 @@ exports.updatePreferences = async (req, res) => {
       preferred_door_count: preferred_door_count || []
     });
 
+    console.log('Preferences updated successfully for userId:', userId, 'Preferences:', preferences);
+
     res.status(200).json({ message: 'Preferences updated successfully', preferences });
   } catch (error) {
-    console.error('Error updating preferences:', error);
+    console.error('Error updating preferences:', error.message, error.stack);
     res.status(500).json({ message: 'Error updating preferences', error: error.message });
   }
 };
@@ -205,6 +216,8 @@ exports.getRecommendations = async (req, res) => {
   }
 };
 
+
+
 exports.generateRecommendations = async (req, res) => {
   try {
     const userId = req.userId;
@@ -223,8 +236,9 @@ exports.generateRecommendations = async (req, res) => {
     try {
       const { stdout, stderr } = await execPromise(command);
       if (stderr) {
-        console.error('Python script stderr:', stderr);
-        if (stderr.includes('Error')) {
+        console.warn('Python script stderr:', stderr);
+        // Only throw an error if the script indicates a critical failure
+        if (stderr.includes('Error in recommendation process') || stderr.includes('sys.exit(1)')) {
           throw new Error('Python script execution failed');
         }
       }
@@ -267,4 +281,6 @@ exports.generateRecommendations = async (req, res) => {
     console.error('Error in generateRecommendations:', error);
     res.status(500).json({ message: 'Error generating recommendations' });
   }
+
+
 };

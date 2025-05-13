@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
-from datetime import datetime, UTC
+from datetime import datetime
 import pytz
 import logging
 import random
@@ -37,12 +37,12 @@ def recency_weight(timestamp, current_time):
 def fetch_data(session, user_id):
     try:
         user_id_str = str(user_id)
-        views_query = "SELECT user_id, car_id, view_timestamp FROM car_views_by_user"
-        views_rows = session.execute(SimpleStatement(views_query))
+        views_query = "SELECT user_id, car_id, view_timestamp FROM car_views_by_user WHERE user_id = %s"
+        views_rows = session.execute(SimpleStatement(views_query), [uuid.UUID(user_id)])
         views_data = [(str(row.user_id), str(row.car_id), row.view_timestamp) for row in views_rows]
 
-        favs_query = "SELECT user_id, car_id, added_timestamp FROM favorite_cars_by_user"
-        favs_rows = session.execute(SimpleStatement(favs_query))
+        favs_query = "SELECT user_id, car_id, added_timestamp FROM favorite_cars_by_user WHERE user_id = %s"
+        favs_rows = session.execute(SimpleStatement(favs_query), [uuid.UUID(user_id)])
         favs_data = [(str(row.user_id), str(row.car_id), row.added_timestamp) for row in favs_rows]
 
         prefs_query = """
@@ -111,105 +111,6 @@ def get_fallback_recommendations(session, used_car_ids):
     except Exception as e:
         logging.error(f"Error fetching fallback recommendations: {e}")
         return []
-
-def user_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
-    try:
-        interactions = []
-        for _, row in views_df.iterrows():
-            if pd.notnull(row['view_timestamp']):
-                interactions.append((row['user_id'], row['car_id'], 1.0 * recency_weight(row['view_timestamp'], current_time)))
-        for _, row in favs_df.iterrows():
-            if pd.notnull(row['added_timestamp']):
-                interactions.append((row['user_id'], row['car_id'], 2.0 * recency_weight(row['added_timestamp'], current_time)))
-
-        interaction_df = pd.DataFrame(interactions, columns=['user_id', 'car_id', 'score'])
-        user_item_matrix = pd.pivot_table(
-            interaction_df, values='score', index='user_id', columns='car_id', aggfunc='sum', fill_value=0
-        )
-        logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
-
-        if user_item_matrix.shape[0] < 2:
-            logging.warning(f"Only one user in matrix for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
-
-        user_similarity_matrix = cosine_similarity(user_item_matrix)
-        user_ids = user_item_matrix.index
-        user_similarity_df = pd.DataFrame(user_similarity_matrix, index=user_ids, columns=user_ids)
-
-        user_views = set(views_df[views_df['user_id'] == user_id]['car_id'])
-        user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
-        excluded_cars = user_views.union(user_favs).union(used_car_ids)
-
-        similar_users = user_similarity_df.loc[user_id].sort_values(ascending=False)[1:11]
-        candidate_scores = {}
-        for similar_user_id, sim_score in similar_users.items():
-            if sim_score > 0:
-                similar_user_views = set(views_df[views_df['user_id'] == similar_user_id]['car_id'])
-                similar_user_favs = set(favs_df[favs_df['user_id'] == similar_user_id]['car_id'])
-                similar_user_cars = similar_user_views.union(similar_user_favs)
-                for car_id in similar_user_cars:
-                    if car_id not in excluded_cars:
-                        candidate_scores[car_id] = candidate_scores.get(car_id, 0) + sim_score
-
-        if not candidate_scores:
-            logging.warning(f"No similar user recommendations for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
-
-        max_score = max(candidate_scores.values())
-        candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
-        top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        return [(car_id, score, "Based on similarities with another user") for car_id, score in top_recs]
-    except Exception as e:
-        logging.error(f"Error in user-based collaborative filtering: {e}")
-        return get_fallback_recommendations(session, used_car_ids)
-
-def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
-    try:
-        interactions = []
-        for _, row in views_df.iterrows():
-            if pd.notnull(row['view_timestamp']):
-                interactions.append((row['user_id'], row['car_id'], 1.0 * recency_weight(row['view_timestamp'], current_time)))
-        for _, row in favs_df.iterrows():
-            if pd.notnull(row['added_timestamp']):
-                interactions.append((row['user_id'], row['car_id'], 2.0 * recency_weight(row['added_timestamp'], current_time)))
-
-        interaction_df = pd.DataFrame(interactions, columns=['user_id', 'car_id', 'score'])
-        user_item_matrix = pd.pivot_table(
-            interaction_df, values='score', index='user_id', columns='car_id', aggfunc='sum', fill_value=0
-        )
-        logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
-
-        car_similarity_matrix = cosine_similarity(user_item_matrix.T)
-        car_ids = user_item_matrix.columns
-        car_similarity_df = pd.DataFrame(car_similarity_matrix, index=car_ids, columns=car_ids)
-
-        user_views = set(views_df[views_df['user_id'] == user_id]['car_id'])
-        user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
-        user_interactions = user_views.union(user_favs)
-
-        if not user_interactions:
-            logging.warning(f"No interactions for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
-
-        candidate_scores = {}
-        for car_id in user_interactions:
-            if car_id in car_similarity_df.index:
-                similar_cars = car_similarity_df.loc[car_id].dropna()
-                for similar_car_id, sim_score in similar_cars.items():
-                    if similar_car_id not in user_interactions.union(used_car_ids) and sim_score > 0:
-                        candidate_scores[similar_car_id] = candidate_scores.get(similar_car_id, 0) + sim_score
-
-        if not candidate_scores:
-            logging.warning(f"No similar item recommendations for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
-
-        max_score = max(candidate_scores.values())
-        candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
-        top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        return [(car_id, score, "Based on your viewing - search and favorite patterns") for car_id, score in top_recs]
-    except Exception as e:
-        logging.error(f"Error in item-based collaborative filtering: {e}")
-        return get_fallback_recommendations(session, used_car_ids)
 
 def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids):
     try:
@@ -315,6 +216,105 @@ def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_i
         return recommendations
     except Exception as e:
         logging.error(f"Error in content-based filtering: {e}")
+        return get_fallback_recommendations(session, used_car_ids)
+
+def user_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
+    try:
+        interactions = []
+        for _, row in views_df.iterrows():
+            if pd.notnull(row['view_timestamp']):
+                interactions.append((row['user_id'], row['car_id'], 1.0 * recency_weight(row['view_timestamp'], current_time)))
+        for _, row in favs_df.iterrows():
+            if pd.notnull(row['added_timestamp']):
+                interactions.append((row['user_id'], row['car_id'], 2.0 * recency_weight(row['added_timestamp'], current_time)))
+
+        interaction_df = pd.DataFrame(interactions, columns=['user_id', 'car_id', 'score'])
+        user_item_matrix = pd.pivot_table(
+            interaction_df, values='score', index='user_id', columns='car_id', aggfunc='sum', fill_value=0
+        )
+        logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
+
+        if user_item_matrix.shape[0] < 2:
+            logging.warning(f"Only one user in matrix for {user_id}, using fallback")
+            return get_fallback_recommendations(session, used_car_ids)
+
+        user_similarity_matrix = cosine_similarity(user_item_matrix)
+        user_ids = user_item_matrix.index
+        user_similarity_df = pd.DataFrame(user_similarity_matrix, index=user_ids, columns=user_ids)
+
+        user_views = set(views_df[views_df['user_id'] == user_id]['car_id'])
+        user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
+        excluded_cars = user_views.union(user_favs).union(used_car_ids)
+
+        similar_users = user_similarity_df.loc[user_id].sort_values(ascending=False)[1:11]
+        candidate_scores = {}
+        for similar_user_id, sim_score in similar_users.items():
+            if sim_score > 0:
+                similar_user_views = set(views_df[views_df['user_id'] == similar_user_id]['car_id'])
+                similar_user_favs = set(favs_df[favs_df['user_id'] == similar_user_id]['car_id'])
+                similar_user_cars = similar_user_views.union(similar_user_favs)
+                for car_id in similar_user_cars:
+                    if car_id not in excluded_cars:
+                        candidate_scores[car_id] = candidate_scores.get(car_id, 0) + sim_score
+
+        if not candidate_scores:
+            logging.warning(f"No similar user recommendations for {user_id}, using fallback")
+            return get_fallback_recommendations(session, used_car_ids)
+
+        max_score = max(candidate_scores.values())
+        candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
+        top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+        return [(car_id, score, "Based on similarities with another user") for car_id, score in top_recs]
+    except Exception as e:
+        logging.error(f"Error in user-based collaborative filtering: {e}")
+        return get_fallback_recommendations(session, used_car_ids)
+
+def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
+    try:
+        interactions = []
+        for _, row in views_df.iterrows():
+            if pd.notnull(row['view_timestamp']):
+                interactions.append((row['user_id'], row['car_id'], 1.0 * recency_weight(row['view_timestamp'], current_time)))
+        for _, row in favs_df.iterrows():
+            if pd.notnull(row['added_timestamp']):
+                interactions.append((row['user_id'], row['car_id'], 2.0 * recency_weight(row['added_timestamp'], current_time)))
+
+        interaction_df = pd.DataFrame(interactions, columns=['user_id', 'car_id', 'score'])
+        user_item_matrix = pd.pivot_table(
+            interaction_df, values='score', index='user_id', columns='car_id', aggfunc='sum', fill_value=0
+        )
+        logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
+
+        car_similarity_matrix = cosine_similarity(user_item_matrix.T)
+        car_ids = user_item_matrix.columns
+        car_similarity_df = pd.DataFrame(car_similarity_matrix, index=car_ids, columns=car_ids)
+
+        user_views = set(views_df[views_df['user_id'] == user_id]['car_id'])
+        user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
+        user_interactions = user_views.union(user_favs)
+
+        if not user_interactions:
+            logging.warning(f"No interactions for {user_id}, using fallback")
+            return get_fallback_recommendations(session, used_car_ids)
+
+        candidate_scores = {}
+        for car_id in user_interactions:
+            if car_id in car_similarity_df.index:
+                similar_cars = car_similarity_df.loc[car_id].dropna()
+                for similar_car_id, sim_score in similar_cars.items():
+                    if similar_car_id not in user_interactions.union(used_car_ids) and sim_score > 0:
+                        candidate_scores[similar_car_id] = candidate_scores.get(similar_car_id, 0) + sim_score
+
+        if not candidate_scores:
+            logging.warning(f"No similar item recommendations for {user_id}, using fallback")
+            return get_fallback_recommendations(session, used_car_ids)
+
+        max_score = max(candidate_scores.values())
+        candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
+        top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
+        return [(car_id, score, "Based on your viewing - search and favorite patterns") for car_id, score in top_recs]
+    except Exception as e:
+        logging.error(f"Error in item-based collaborative filtering: {e}")
         return get_fallback_recommendations(session, used_car_ids)
 
 def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, current_time, session, used_car_ids):
@@ -477,7 +477,7 @@ def generate_recommendations(user_id):
 
         delete_existing_recommendations(session, user_id)
 
-        current_time = datetime.now(UTC)
+        current_time = datetime.now(pytz.UTC)
         used_car_ids = set()
 
         content_based_recs = content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids)

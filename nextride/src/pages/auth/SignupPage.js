@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock, FaCar, FaEnvelope, FaMapMarkerAlt, FaBirthdayCake } from 'react-icons/fa';
 import axios from 'axios';
@@ -14,60 +14,65 @@ const SignupPage = () => {
     preferredBrands: [],
     preferredFuelTypes: [],
     preferredTransmissions: [],
+    preferredEquipment: [],
     budgetMin: '',
     budgetMax: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [step, setStep] = useState(1);
+  const [labels, setLabels] = useState({
+    brands: [],
+    fuel_types: [],
+    transmissions: [],
+    cities: [],
+    equipment: [],
+  });
+  const [showAllBrands, setShowAllBrands] = useState(false);
   const navigate = useNavigate();
 
-  const brands = [
-    'Audi', 'BMW', 'Citroën', 'Dacia', 'Fiat', 'Ford', 'Honda', 'Hyundai', 
-    'Kia', 'Mercedes-Benz', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 
-    'Renault', 'Seat', 'Skoda', 'Toyota', 'Volkswagen', 'Volvo'
-  ];
-
-  const fuelTypes = ['Essence', 'Diesel', 'Hybrid', 'Electric', 'GPL'];
-  const transmissions = ['Manuelle', 'Automatique', 'Semi-automatique'];
-  const cities = [
-    'Agadir', 'Casablanca', 'Fès', 'Marrakech', 'Meknès', 'Mohammedia', 
-    'Oujda', 'Rabat', 'Salé', 'Tanger', 'Tétouan', 'Benguerir', 'El Jadida'
-  ];
+  // Fetch labels from labels.json
+  useEffect(() => {
+    const fetchLabels = async () => {
+      try {
+        const response = await fetch('/labels.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch labels');
+        }
+        const data = await response.json();
+        console.log('Loaded brands:', data.brands); // Debug: Log brands
+        setLabels(data);
+      } catch (err) {
+        setError('Error loading options. Please try again later.');
+        console.error(err);
+      }
+    };
+    fetchLabels();
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    
+    const { name, value, type, checked } = e.target;
+
     if (type === 'checkbox') {
-      const { checked } = e.target;
-      const arrayName = name.split('-')[0];
-      const itemValue = name.split('-')[1];
-      
-      setFormData(prev => {
-        if (checked) {
-          return {
-            ...prev,
-            [arrayName]: [...prev[arrayName], itemValue]
-          };
-        } else {
-          return {
-            ...prev,
-            [arrayName]: prev[arrayName].filter(item => item !== itemValue)
-          };
-        }
-      });
+      const [arrayName, itemValue] = name.split('|');
+      setFormData((prev) => ({
+        ...prev,
+        [arrayName]: checked
+          ? [...prev[arrayName], itemValue]
+          : prev[arrayName].filter((item) => item !== itemValue),
+      }));
     } else {
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         [name]: value,
-      });
+      }));
     }
   };
 
   const nextStep = (e) => {
-    e.preventDefault(); // Prevent form submission
+    e.preventDefault();
     if (step === 1) {
-      // Validate first step
       if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
         setError('Please fill in all required fields');
         return;
@@ -81,22 +86,24 @@ const SignupPage = () => {
         return;
       }
     }
-    
+
     setError('');
     setStep(step + 1);
   };
 
   const prevStep = () => {
     setStep(step - 1);
+    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-  
+    setSuccess('');
+
     try {
-      // Step 1: Register the user
       const userData = {
         username: formData.username,
         email: formData.email,
@@ -104,40 +111,53 @@ const SignupPage = () => {
         age: formData.age ? parseInt(formData.age) : null,
         location: formData.location || null,
       };
-  
+
       const registerResponse = await axios.post('http://localhost:5000/api/auth/register', userData);
-      const { user } = registerResponse.data;
-  
-      // Step 2: Store user preferences
+      const { user, token } = registerResponse.data;
+
       const preferencesData = {
-        userId: user.id, // Send userId in the body
+        userId: user.id,
         budget_min: formData.budgetMin ? parseInt(formData.budgetMin) : 0,
         budget_max: formData.budgetMax ? parseInt(formData.budgetMax) : 0,
-        mileage_min: 0, // Not collected in the form, set to 0
-        mileage_max: 0, // Not collected in the form, set to 0
+        mileage_min: 0,
+        mileage_max: 0,
         preferred_brands: formData.preferredBrands,
         preferred_fuel_types: formData.preferredFuelTypes,
         preferred_transmissions: formData.preferredTransmissions,
-        preferred_years: [], // Not collected in the form
-        preferred_door_count: [], // Not collected in the form
+        preferred_equipment: formData.preferredEquipment,
+        preferred_years: [],
+        preferred_door_count: [],
       };
-  
-      await axios.put('http://localhost:5000/api/users/preferences', preferencesData);
-  
-      // Step 3: Store user and preferences in localStorage for session management
+
+      await axios.put('http://localhost:5000/api/users/preferences', preferencesData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       localStorage.setItem('carUser', JSON.stringify(user));
       localStorage.setItem('carUserPreferences', JSON.stringify(preferencesData));
-  
+      localStorage.setItem('carToken', token);
+
       setLoading(false);
-      navigate('/');
+      setSuccess('Account created successfully! Redirecting to login...');
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Error creating account. Please try again.');
       setLoading(false);
+      console.error('Submission error:', err.response?.data);
     }
   };
 
+  const toggleBrands = () => {
+    setShowAllBrands(!showAllBrands);
+  };
 
-
+  // Get brands to display (top 15 or all)
+  const displayedBrands = showAllBrands ? labels.brands : labels.brands.slice(0, 15);
 
   return (
     <div className="container py-5">
@@ -158,14 +178,19 @@ const SignupPage = () => {
                   {error}
                 </div>
               )}
+              {success && (
+                <div className="alert alert-success" role="alert">
+                  {success}
+                </div>
+              )}
 
               <div className="progress mb-4 rounded-pill" style={{ height: '10px' }}>
-                <div 
-                  className="progress-bar bg-warning" 
-                  role="progressbar" 
-                  style={{ width: `${step * 50}%` }} 
-                  aria-valuenow={step * 33} 
-                  aria-valuemin="0" 
+                <div
+                  className="progress-bar bg-warning"
+                  role="progressbar"
+                  style={{ width: `${step * 50}%` }}
+                  aria-valuenow={step * 50}
+                  aria-valuemin="0"
                   aria-valuemax="100"
                 />
               </div>
@@ -175,7 +200,9 @@ const SignupPage = () => {
                   <>
                     <h5 className="mb-3 fw-bold">Account Information</h5>
                     <div className="mb-3">
-                      <label htmlFor="username" className="form-label">Username*</label>
+                      <label htmlFor="username" className="form-label">
+                        Username*
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaUser className="text-muted" />
@@ -194,7 +221,9 @@ const SignupPage = () => {
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="email" className="form-label">Email*</label>
+                      <label htmlFor="email" className="form-label">
+                        Email*
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaEnvelope className="text-muted" />
@@ -213,7 +242,9 @@ const SignupPage = () => {
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="password" className="form-label">Password*</label>
+                      <label htmlFor="password" className="form-label">
+                        Password*
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaLock className="text-muted" />
@@ -233,7 +264,9 @@ const SignupPage = () => {
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="confirmPassword" className="form-label">Confirm Password*</label>
+                      <label htmlFor="confirmPassword" className="form-label">
+                        Confirm Password*
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaLock className="text-muted" />
@@ -252,7 +285,9 @@ const SignupPage = () => {
                     </div>
 
                     <div className="mb-3">
-                      <label htmlFor="age" className="form-label">Age</label>
+                      <label htmlFor="age" className="form-label">
+                        Age
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaBirthdayCake className="text-muted" />
@@ -272,7 +307,9 @@ const SignupPage = () => {
                     </div>
 
                     <div className="mb-4">
-                      <label htmlFor="location" className="form-label">Location</label>
+                      <label htmlFor="location" className="form-label">
+                        Location
+                      </label>
                       <div className="input-group">
                         <span className="input-group-text bg-light">
                           <FaMapMarkerAlt className="text-muted" />
@@ -285,8 +322,10 @@ const SignupPage = () => {
                           onChange={handleChange}
                         >
                           <option value="">Select your city</option>
-                          {cities.map(city => (
-                            <option key={city} value={city}>{city}</option>
+                          {labels.cities.map((city) => (
+                            <option key={city} value={city}>
+                              {city}
+                            </option>
                           ))}
                         </select>
                       </div>
@@ -297,42 +336,58 @@ const SignupPage = () => {
                 {step === 2 && (
                   <>
                     <h5 className="mb-3 fw-bold">Car Preferences</h5>
-                    <p className="text-muted mb-4">Tell us what you're looking for to get personalized recommendations</p>
-                    
+                    <p className="text-muted mb-4">
+                      Tell us what you're looking for to get personalized recommendations
+                    </p>
+
                     <div className="mb-4">
                       <label className="form-label">Preferred Brands</label>
                       <div className="row row-cols-2 g-2">
-                        {brands.map(brand => (
+                        {displayedBrands.map((brand) => (
                           <div key={brand} className="col">
                             <div className="form-check">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
-                                id={`brand-${brand}`}
-                                name={`preferredBrands-${brand}`}
+                                id={`brand-${brand.replace(/[^a-zA-Z0-9]/g, '')}`}
+                                name={`preferredBrands|${brand}`}
                                 checked={formData.preferredBrands.includes(brand)}
                                 onChange={handleChange}
                               />
-                              <label className="form-check-label" htmlFor={`brand-${brand}`}>
+                              <label
+                                className="form-check-label"
+                                htmlFor={`brand-${brand.replace(/[^a-zA-Z0-9]/g, '')}`}
+                              >
                                 {brand}
                               </label>
                             </div>
                           </div>
                         ))}
                       </div>
+                      {labels.brands.length > 15 && (
+                        <div className="mt-3 text-center">
+                          <button
+                            type="button"
+                            className="btn btn-link text-warning"
+                            onClick={toggleBrands}
+                          >
+                            {showAllBrands ? 'See Less' : 'See More'}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mb-4">
                       <label className="form-label">Fuel Type</label>
                       <div className="row row-cols-2 g-2">
-                        {fuelTypes.map(fuel => (
+                        {labels.fuel_types.map((fuel) => (
                           <div key={fuel} className="col">
                             <div className="form-check">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
                                 id={`fuel-${fuel}`}
-                                name={`preferredFuelTypes-${fuel}`}
+                                name={`preferredFuelTypes|${fuel}`}
                                 checked={formData.preferredFuelTypes.includes(fuel)}
                                 onChange={handleChange}
                               />
@@ -348,19 +403,50 @@ const SignupPage = () => {
                     <div className="mb-4">
                       <label className="form-label">Transmission</label>
                       <div className="row row-cols-2 g-2">
-                        {transmissions.map(transmission => (
+                        {labels.transmissions.map((transmission) => (
                           <div key={transmission} className="col">
                             <div className="form-check">
                               <input
                                 className="form-check-input"
                                 type="checkbox"
                                 id={`transmission-${transmission}`}
-                                name={`preferredTransmissions-${transmission}`}
+                                name={`preferredTransmissions|${transmission}`}
                                 checked={formData.preferredTransmissions.includes(transmission)}
                                 onChange={handleChange}
                               />
-                              <label className="form-check-label" htmlFor={`transmission-${transmission}`}>
+                              <label
+                                className="form-check-label"
+                                htmlFor={`transmission-${transmission}`}
+                              >
                                 {transmission}
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="form-label">Preferred Equipment</label>
+                      <div className="row row-cols-2 g-2">
+                        {labels.equipment.map((equipment) => (
+                          <div key={equipment} className="col">
+                            <div className="form-check">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`equipment-${equipment}`}
+                                name={`preferredEquipment|${equipment}`}
+                                checked={formData.preferredEquipment.includes(equipment)}
+                                onChange={handleChange}
+                              />
+                              <label
+                                className="form-check-label"
+                                htmlFor={`equipment-${equipment}`}
+                              >
+                                {equipment
+                                  .replace(/_/g, ' ')
+                                  .replace(/\b\w/g, (c) => c.toUpperCase())}
                               </label>
                             </div>
                           </div>
@@ -370,30 +456,40 @@ const SignupPage = () => {
 
                     <div className="row mb-4">
                       <div className="col-md-6">
-                        <label htmlFor="budgetMin" className="form-label">Budget Min (MAD)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="budgetMin"
-                          name="budgetMin"
-                          placeholder="Minimum"
-                          value={formData.budgetMin}
-                          onChange={handleChange}
-                          min="0"
-                        />
+                        <label htmlFor="budgetMin" className="form-label">
+                          Budget Min (DH)
+                        </label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light">DH</span>
+                          <input
+                            type="number"
+                            className="form-control"
+                            id="budgetMin"
+                            name="budgetMin"
+                            placeholder="Minimum"
+                            value={formData.budgetMin}
+                            onChange={handleChange}
+                            min="0"
+                          />
+                        </div>
                       </div>
                       <div className="col-md-6">
-                        <label htmlFor="budgetMax" className="form-label">Budget Max (MAD)</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          id="budgetMax"
-                          name="budgetMax"
-                          placeholder="Maximum"
-                          value={formData.budgetMax}
-                          onChange={handleChange}
-                          min="0"
-                        />
+                        <label htmlFor="budgetMax" className="form-label">
+                          Budget Max (DH)
+                        </label>
+                        <div className="input-group">
+                          <span className="input-group-text bg-light">DH</span>
+                          <input
+                            type="number"
+                            className="form-control"
+                            id="budgetMax"
+                            name="budgetMax"
+                            placeholder="Maximum"
+                            value={formData.budgetMax}
+                            onChange={handleChange}
+                            min="0"
+                          />
+                        </div>
                       </div>
                     </div>
                   </>
@@ -409,15 +505,15 @@ const SignupPage = () => {
                       Back
                     </button>
                   )}
-                  
+
                   {step < 2 ? (
                     <button
-  type="button"
-  className="btn btn-warning px-4 rounded-pill ms-auto"
-  onClick={nextStep} // This already passes the event
->
-  Next
-</button>
+                      type="button"
+                      className="btn btn-warning px-4 rounded-pill ms-auto"
+                      onClick={nextStep}
+                    >
+                      Next
+                    </button>
                   ) : (
                     <button
                       type="submit"
@@ -426,7 +522,11 @@ const SignupPage = () => {
                     >
                       {loading ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                            aria-hidden="true"
+                          ></span>
                           Creating Account...
                         </>
                       ) : (
@@ -439,7 +539,10 @@ const SignupPage = () => {
                 {step === 1 && (
                   <div className="text-center mt-4">
                     <p className="mb-0">
-                      Already have an account? <Link to="/login" className="text-decoration-none" style={{ color: "#BC7328" }}><strong>Sign In</strong></Link>
+                      Already have an account?{' '}
+                      <Link to="/login" className="text-decoration-none" style={{ color: '#BC7328' }}>
+                        <strong>Sign In</strong>
+                      </Link>
                     </p>
                   </div>
                 )}

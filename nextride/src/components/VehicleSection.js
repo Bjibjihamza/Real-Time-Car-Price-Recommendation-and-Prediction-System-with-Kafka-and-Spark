@@ -157,14 +157,12 @@ function VehicleSection() {
   const parseDate = (dateStr) => {
     if (!dateStr) return null;
     try {
-      // Handle DD/MM/YYYY HH:MM format
       if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}$/)) {
         const [datePart, timePart] = dateStr.split(' ');
         const [day, month, year] = datePart.split('/').map(Number);
         const [hours, minutes] = timePart.split(':').map(Number);
         return new Date(year, month - 1, day, hours, minutes);
       }
-      // Handle YYYY-MM-DD HH:MM:SS format
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/)) {
         return new Date(dateStr);
       }
@@ -180,6 +178,31 @@ function VehicleSection() {
     () => (activeTab === 'all' ? vehicles : activeTab === 'recommended' ? recommendedVehicles : vehicles),
     [activeTab, vehicles, recommendedVehicles]
   );
+
+  // Pagination range logic: show 5 pages before and after the current page
+  const getPaginationRange = () => {
+    const maxPagesToShow = 11; // 5 before + current + 5 after
+    let start = Math.max(1, page - 5);
+    let end = Math.min(totalPages, start + maxPagesToShow - 1);
+
+    // Adjust start if end is at the maximum
+    if (end === totalPages) {
+      start = Math.max(1, end - maxPagesToShow + 1);
+    }
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return {
+      pages,
+      showLeftEllipsis: start > 1,
+      showRightEllipsis: end < totalPages,
+    };
+  };
+
+  const { pages, showLeftEllipsis, showRightEllipsis } = getPaginationRange();
 
   return (
     <section className="container py-5" style={{ maxWidth: '1400px' }}>
@@ -396,32 +419,114 @@ function VehicleSection() {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, index) => (
-                <li key={index + 1} className={`page-item ${page === index + 1 ? 'active' : ''}`}>
+
+              {showLeftEllipsis && (
+                <>
+                  <li className="page-item">
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(1)}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: '#fff',
+                        color: '#1a1a1a',
+                        fontWeight: '500',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        transition: 'background-color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fff')}
+                    >
+                      1
+                    </button>
+                  </li>
+                  <li className="page-item disabled">
+                    <span
+                      className="page-link"
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: '#fff',
+                        color: '#aaa',
+                        fontWeight: '500',
+                      }}
+                    >
+                      ...
+                    </span>
+                  </li>
+                </>
+              )}
+
+              {pages.map((pageNumber) => (
+                <li key={pageNumber} className={`page-item ${page === pageNumber ? 'active' : ''}`}>
                   <button
                     className="page-link"
-                    onClick={() => handlePageChange(index + 1)}
+                    onClick={() => handlePageChange(pageNumber)}
                     style={{
                       padding: '8px 14px',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: page === index + 1 ? '#ffc107' : '#fff',
-                      color: page === index + 1 ? '#fff' : '#1a1a1a',
+                      backgroundColor: page === pageNumber ? '#ffc107' : '#fff',
+                      color: page === pageNumber ? '#fff' : '#1a1a1a',
                       fontWeight: '500',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                       transition: 'background-color 0.3s ease, color 0s ease',
                     }}
                     onMouseEnter={(e) =>
-                      page !== index + 1 && (e.currentTarget.style.backgroundColor = '#e0e0e0')
+                      page !== pageNumber && (e.currentTarget.style.backgroundColor = '#e0e0e0')
                     }
                     onMouseLeave={(e) =>
-                      page !== index + 1 && (e.currentTarget.style.backgroundColor = '#fff')
+                      page !== pageNumber && (e.currentTarget.style.backgroundColor = '#fff')
                     }
                   >
-                    {index + 1}
+                    {pageNumber}
                   </button>
                 </li>
               ))}
+
+              {showRightEllipsis && (
+                <>
+                  <li className="page-item disabled">
+                    <span
+                      className="page-link"
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: '#fff',
+                        color: '#aaa',
+                        fontWeight: '500',
+                      }}
+                    >
+                      ...
+                    </span>
+                  </li>
+                  <li className="page-item">
+                    <button
+                      className="page-link"
+                      onClick={() => handlePageChange(totalPages)}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: '#fff',
+                        color: '#1a1a1a',
+                        fontWeight: '500',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        transition: 'background-color 0.3s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fff')}
+                    >
+                      {totalPages}
+                    </button>
+                  </li>
+                </>
+              )}
+
               <li className={`page-item ${page === totalPages ? 'disabled' : ''}`}>
                 <button
                   className="page-link"

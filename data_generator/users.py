@@ -3,7 +3,7 @@ import random
 import bcrypt
 from uuid import uuid4
 from faker import Faker
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
 
@@ -61,7 +61,7 @@ def generate_user():
         'password': hashed_password,  # Store hashed password
         'age': random.randint(18, 65),
         'location': random.choice(cities),
-        'created_at': datetime.now(UTC)
+        'created_at': datetime.now(timezone.utc)
     }
     return user
 
@@ -118,4 +118,3 @@ if __name__ == "__main__":
     finally:
         # Clean up Cassandra connection
         cluster.shutdown()
-        logger.info("Cassandra connection closed")

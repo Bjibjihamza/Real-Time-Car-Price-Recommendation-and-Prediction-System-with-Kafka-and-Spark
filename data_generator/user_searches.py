@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timezone, timedelta
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
 from cassandra.query import SimpleStatement
@@ -87,14 +87,14 @@ def generate_search(user_id):
     
     # Generate search date (within the last 30 days)
     days_ago = random.randint(0, 30)
-    search_date = (datetime.now(UTC) - timedelta(days=days_ago)).date()
+    search_date = (datetime.now(timezone.utc) - timedelta(days=days_ago)).date()
     
     # Generate search timestamp (random time on the search date)
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
     search_timestamp = datetime.combine(search_date, datetime.min.time()).replace(
-        hour=random_hour, minute=random_minute, second=random_second, tzinfo=UTC
+        hour=random_hour, minute=random_minute, second=random_second, tzinfo=timezone.utc
     )
     
     # Generate filters (at least one filter)

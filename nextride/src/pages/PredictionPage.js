@@ -65,7 +65,7 @@ const PredictionPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('/labels.json')
+    fetch('/labels_p.json')
       .then(response => response.json())
       .then(data => {
         setLabels(data);

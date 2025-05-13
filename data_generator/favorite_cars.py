@@ -1,6 +1,6 @@
 import logging
 import random
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timezone, timedelta
 from cassandra.cluster import Cluster
 from cassandra.policies import DCAwareRoundRobinPolicy
 from cassandra.query import SimpleStatement
@@ -121,7 +121,7 @@ def select_favorite_cars(user_id):
         'mileage_max': 500000,
         'preferred_years': set()
     })
-    viewed_cars = [(car_id, duration) for car_id, duration in user_views.get(str(user_id), [])]
+    viewed_cars = [(car_id, duration) for car_id, duration in user_views.get(user_id, [])]
     search_filters = user_searches.get(user_id, [])
 
     # Score cars based on preferences, views, and searches
@@ -145,7 +145,7 @@ def select_favorite_cars(user_id):
             score += 20
         # View matching
         for view_car_id, duration in viewed_cars:
-            if str(car['id']) == view_car_id:
+            if car['id'] == view_car_id:  # Compare UUIDs directly
                 score += min(duration // 10, 50)  # Higher score for longer views
                 break
         # Search filter matching
@@ -172,12 +172,12 @@ def select_favorite_cars(user_id):
 # Function to generate a favorite car entry
 def generate_favorite(user_id, car_id):
     days_ago = random.randint(0, 30)
-    added_date = (datetime.now(UTC) - timedelta(days=days_ago)).date()
+    added_date = (datetime.now(timezone.utc) - timedelta(days=days_ago)).date()
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)
     random_second = random.randint(0, 59)
     added_timestamp = datetime.combine(added_date, datetime.min.time()).replace(
-        hour=random_hour, minute=random_minute, second=random_second, tzinfo=UTC
+        hour=random_hour, minute=random_minute, second=random_second, tzinfo=timezone.utc
     )
     return {
         'user_id': user_id,
