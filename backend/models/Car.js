@@ -318,48 +318,31 @@ class Car {
     try {
       const userUuid = types.Uuid.fromString(userId);
       const carUuid = types.Uuid.fromString(carId);
-
-      // Fetch all favorites for the user to find the matching car_id
+  
+      // Step 1: Query to find the favorite entry with the given user_id and car_id
       const findQuery = `
-        SELECT added_date, added_timestamp 
-        FROM cars_keyspace.favorite_cars_by_user 
-        WHERE user_id = ?
+        SELECT added_date, added_timestamp
+        FROM cars_keyspace.favorite_cars_by_user
+        WHERE user_id = ? AND car_id = ? ALLOW FILTERING
       `;
-      const findResult = await client.execute(findQuery, [userUuid], { prepare: true });
-
+      const findResult = await client.execute(findQuery, [userUuid, carUuid], { prepare: true });
+  
       if (findResult.rows.length === 0) {
-        console.log(`No favorites found for userId: ${userId}`);
-        return false;
+        console.log(`No favorite found for userId: ${userId}, carId: ${carId}`);
+        return false; // Favorite not found
       }
-
-      let deleted = false;
-      for (const favorite of findResult.rows) {
-        const checkQuery = `
-          SELECT car_id 
-          FROM cars_keyspace.favorite_cars_by_user 
-          WHERE user_id = ? AND added_date = ? AND added_timestamp = ? AND car_id = ?
-          LIMIT 1
-        `;
-        const checkResult = await client.execute(checkQuery, [userUuid, favorite.added_date, favorite.added_timestamp, carUuid], { prepare: true });
-
-        if (checkResult.rows.length > 0) {
-          const deleteQuery = `
-            DELETE FROM cars_keyspace.favorite_cars_by_user 
-            WHERE user_id = ? AND added_date = ? AND added_timestamp = ? AND car_id = ?
-          `;
-          await client.execute(deleteQuery, [userUuid, favorite.added_date, favorite.added_timestamp, carUuid], { prepare: true });
-          console.log(`Removed favorite for userId: ${userId}, carId: ${carId}`);
-          deleted = true;
-          break;
-        }
-      }
-
-      if (!deleted) {
-        console.log(`No matching favorite found for userId: ${userId}, carId: ${carId}`);
-        return false;
-      }
-
-      return true;
+  
+      // Step 2: Use the first matching favorite's primary key to delete
+      const { added_date, added_timestamp } = findResult.rows[0];
+  
+      const deleteQuery = `
+        DELETE FROM cars_keyspace.favorite_cars_by_user
+        WHERE user_id = ? AND added_date = ? AND added_timestamp = ?
+      `;
+      await client.execute(deleteQuery, [userUuid, added_date, added_timestamp], { prepare: true });
+  
+      console.log(`Removed favorite for userId: ${userId}, carId: ${carId}`);
+      return true; // Deletion successful
     } catch (error) {
       console.error('Error in removeFavorite:', error.message, 'userId:', userId, 'carId:', carId);
       throw error;
