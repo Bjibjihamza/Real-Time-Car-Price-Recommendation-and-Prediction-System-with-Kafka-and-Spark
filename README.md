@@ -2,13 +2,13 @@
 
 ## 1. Introduction
 
-The **Car Recommendation Pipeline** is a full-stack, big data system designed to scrape, process, store, and recommend car listings with price predictions and personalized recommendations. It consists of a **frontend** (React application), a **backend** (Node.js/Express API), and a **big data pipeline** (using Apache Kafka, Spark, and Cassandra). The system integrates web scraping, data streaming, processing, synthetic data generation, recommendation algorithms, and a neural network-based price prediction model to provide a seamless user experience.
+The **Car Recommendation Pipeline** is a full-stack, big data system designed to scrape, process, store, and recommend car listings with price predictions and personalized recommendations. It consists of a **frontend** (React application), a **backend** (Node.js/Express API), and a **big data pipeline** (using Apache Kafka, Spark, Cassandra, and Airflow). The system integrates web scraping, data streaming, processing, synthetic data generation, recommendation algorithms, and a neural network-based price prediction model to provide a seamless user experience.
 
 **Key Features**:
 
 - **Frontend**: User authentication, car search, price prediction, visualizations, car listing creation, and personalized recommendation display.
 - **Backend**: RESTful API handling authentication, car data, searches, predictions, and recommendations, integrated with Apache Cassandra and a Flask-based ML service.
-- **Big Data Pipeline**: Scrapes car listings from Avito and Moteur, streams data via Kafka, processes it with Spark, stores it in Cassandra, generates synthetic user data, and provides recommendations and price predictions.
+- **Big Data Pipeline**: Scrapes car listings from Avito and Moteur, streams data via Kafka, processes it with Spark, stores it in Cassandra, generates synthetic user data, provides recommendations and price predictions, and automates scraping with Airflow.
 - **Integration**: Frontend communicates with the backend at `http://localhost:5000`; backend queries `cars_keyspace`, runs recommendation scripts, and calls the ML service at `http://localhost:5001/predict`.
 
 This documentation covers setup, structure, API integration, data pipeline, execution, and troubleshooting.
@@ -19,14 +19,15 @@ This documentation covers setup, structure, API integration, data pipeline, exec
 
 - **Operating System**: Ubuntu
 - **Node.js**: v18.x or later
-- **Conda**: Environment `cenv` (Python 3.10)
+- **Conda**: Environment `cenv` (Python 3.10) for most components; `venv` (Python 3.12) for Airflow
 - **Apache Cassandra**: v4.1.3 in `~/cassandra` with `cars_keyspace`
 - **Apache Kafka**: v3.9.0 in `~/kafka`
 - **Apache Spark**: v3.5.0 in `/opt/spark-3.5.0`
+- **Apache Airflow**: v2.9.3 in `~/airflow` (for automating scraping scripts)
 - **ML Service**: Running at `http://localhost:5001/predict`
 - **Big Data Pipeline**: Populated `cleaned_cars` and synthetic user data
 
-### 2.2 Install Conda Environment
+### 2.2 Install Conda Environments
 
 1. **Install Conda**:
     
@@ -36,24 +37,34 @@ This documentation covers setup, structure, API integration, data pipeline, exec
     conda --version
     ```
     
-2. **Create Environment**:
+2. **Create `cenv` (Python 3.10)**:
     
     ```bash
     conda create -n cenv python=3.10
     conda activate cenv
     ```
     
-3. **Install Dependencies**:
+3. **Install `cenv` Dependencies**:
     
     ```bash
     pip install selenium==4.25.0 webdriver-manager==4.0.2 requests==2.32.3 pandas==2.2.3 kafka-python==2.0.2 pyspark==3.5.0 cassandra-driver==3.29.2 findspark==2.0.1 faker==30.8.0 bcrypt==4.2.0 scikit-learn==1.5.2 scipy==1.14.1 tensorflow==2.17.0 flask==3.0.3
     ```
     
-4. **Verify**:
+4. **Create `venv` (Python 3.12) for Airflow**:
     
     ```bash
+    conda create -n venv python=3.12
+    conda activate venv
+    ```
+    
+5. **Verify**:
+    
+    ```bash
+    conda activate cenv
     python --version
     pip list
+    conda activate venv
+    python --version
     ```
     
 
@@ -220,7 +231,72 @@ npm --version
     ```
     
 
-### 2.7 Frontend Setup
+### 2.7 Apache Airflow Setup
+
+1. **Activate `venv` Environment**:
+    
+    ```bash
+    conda activate venv
+    ```
+    
+2. **Install Airflow**:
+    
+    ```bash
+    pip install apache-airflow==2.9.3 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.8.txt"
+    ```
+    
+3. **Set Airflow Home Directory**:
+    
+    ```bash
+    export AIRFLOW_HOME=~/airflow
+    echo 'export AIRFLOW_HOME=~/airflow' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+    
+4. **Initialize Airflow Database**:
+    
+    ```bash
+    airflow db init
+    ```
+    
+5. **Create Admin User**:
+    
+    ```bash
+    airflow users create \
+        --username admin \
+        --firstname Admin \
+        --lastname User \
+        --role Admin \
+        --email admin@example.com
+    ```
+    
+    - Enter a password when prompted.
+6. **Start Airflow Services**:
+    - **Webserver** (in one terminal):
+        
+        ```bash
+        conda activate venv
+        airflow webserver --port 8080
+        ```
+        
+    - **Scheduler** (in another terminal):
+        
+        ```bash
+        conda activate venv
+        airflow scheduler
+        ```
+        
+7. **Verify**:
+    - Access `http://localhost:8080` and log in with admin credentials.
+    - Check database: `ls ~/airflow/airflow.db`
+8. **Optional: Disable Example DAGs**:
+    
+    ```bash
+    sed -i 's/load_examples = True/load_examples = False/' ~/airflow/airflow.cfg
+    ```
+    
+
+### 2.8 Frontend Setup
 
 1. **Navigate to Directory**:
     
@@ -249,7 +325,7 @@ npm --version
     ```
     
 
-### 2.8 Backend Setup
+### 2.9 Backend Setup
 
 1. **Navigate to Directory**:
     
@@ -289,7 +365,7 @@ npm --version
     ```
     
 
-### 2.9 ML Service Setup
+### 2.10 ML Service Setup
 
 1. **Navigate to Directory**:
     
@@ -317,16 +393,101 @@ npm --version
     ```
     
 
-## 3. Database Configuration
+## 3. Airflow Installation and Configuration
 
-### 3.1 Cassandra Keyspace
+### 3.1 Overview
+
+Apache Airflow (v2.9.3) is used to automate the execution of scraping scripts (`moteur_scraper.py`, `avito_scraper.py`) in `~/projects/cars_recommandation_pipeline/scraping`. Airflow is installed in a separate Conda environment (`venv`, Python 3.12) to avoid dependency conflicts with the main pipeline (`cenv`, Python 3.10).
+
+### 3.2 Prerequisites
+
+- **Conda Environment**: `venv` (Python 3.12)
+- **Scripts**: `moteur_scraper.py`, `avito_scraper.py` in `~/projects/cars_recommandation_pipeline/scraping`
+- **Airflow Home**: `~/airflow`
+
+### 3.3 Installation Steps
+
+1. **Activate `venv`**:
+    
+    ```bash
+    conda activate venv
+    ```
+    
+2. **Install Airflow**:
+    
+    ```bash
+    pip install apache-airflow==2.9.3 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.3/constraints-3.8.txt"
+    ```
+    
+    - Uses Python 3.8 constraints as a fallback for compatibility with Python 3.12.
+3. **Set Airflow Home**:
+    
+    ```bash
+    export AIRFLOW_HOME=~/airflow
+    echo 'export AIRFLOW_HOME=~/airflow' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+    
+4. **Initialize Database**:
+    
+    ```bash
+    airflow db init
+    ```
+    
+    - Creates SQLite database at `~/airflow/airflow.db`.
+    - Note: SQLite is used for testing; use PostgreSQL/MySQL for production.
+5. **Create Admin User**:
+    
+    ```bash
+    airflow users create \
+        --username admin \
+        --firstname Admin \
+        --lastname User \
+        --role Admin \
+        --email admin@example.com
+    ```
+    
+    - Enter a password when prompted.
+6. **Start Airflow Services**:
+    - **Webserver**:
+        
+        ```bash
+        conda activate venv
+        airflow webserver --port 8080
+        ```
+        
+    - **Scheduler**:
+        
+        ```bash
+        conda activate venv
+        airflow scheduler
+        ```
+        
+7. **Verify**:
+    - Access web UI at `http://localhost:8080`.
+    - Log in with admin credentials.
+    - Check database: `ls ~/airflow/airflow.db`.
+
+### 3.4 Notes
+
+- **Warnings**:
+    - `db init` is deprecated; future versions should use `airflow db migrate` and `airflow connections create-default-connections`.
+    - Example DAG warnings (`virtualenv`, `kubernetes`) can be ignored or suppressed by setting `load_examples = False` in `~/airflow/airflow.cfg`.
+    - SQLite warning: Not suitable for production; consider PostgreSQL/MySQL.
+    - Cryptography warning: Set a Fernet key in `airflow.cfg` for encryption in production.
+- **Dependencies**: Compatible with `yarl==1.9.4`, `zipp==3.19.2`.
+- **DAG Creation**: Place a custom DAG in `~/airflow/dags` to automate `moteur_scraper.py` and `avito_scraper.py`.
+
+## 4. Database Configuration
+
+### 4.1 Cassandra Keyspace
 
 ```sql
 CREATE KEYSPACE IF NOT EXISTS cars_keyspace
 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'} AND durable_writes = true;
 ```
 
-### 3.2 Cassandra Tables
+### 4.2 Cassandra Tables
 
 #### `cleaned_cars`
 
@@ -623,7 +784,7 @@ CREATE TABLE cars_keyspace.car_predictions (
     AND speculative_retry = '99p';
 ```
 
-### 3.3 Schema Explanation
+### 4.3 Schema Explanation
 
 - **`cleaned_cars`**: Stores car listings with attributes like `brand`, `price`, `source`. Indexed for efficient queries.
 - **`users`**: Stores user data (e.g., `username`, hashed `password`).
@@ -634,7 +795,7 @@ CREATE TABLE cars_keyspace.car_predictions (
 - **`user_recommendations`**: Stores recommendations with `similarity_score`, `recommendation_reason`, `method`, and `rank`.
 - **`car_predictions`**: Stores price predictions with `car_features` as text (JSON string) and `predicted_price`.
 
-### 3.4 Create and Verify Schema
+### 4.4 Create and Verify Schema
 
 1. **Create Schema**:
     
@@ -655,9 +816,9 @@ CREATE TABLE cars_keyspace.car_predictions (
     ```
     
 
-## 4. System Architecture
+## 5. System Architecture
 
-### 4.1 Frontend Structure
+### 5.1 Frontend Structure
 
 - **Directory**: `~/projects/cars_recommandation_pipeline/nextride`
     - `build/`: Production build output
@@ -679,7 +840,7 @@ CREATE TABLE cars_keyspace.car_predictions (
     - `PredictionPage.js`: Collects car features, sends to `/api/prediction`
     - `UserProfilePage.js`, `VehicleSection.js`: Display recommendations
 
-### 4.2 Backend Structure
+### 5.2 Backend Structure
 
 - **Directory**: `~/projects/cars_recommandation_pipeline/backend`
     - `config/`: `db.js` (Cassandra client)
@@ -703,20 +864,21 @@ CREATE TABLE cars_keyspace.car_predictions (
     - `predictionController.js`: Calls ML service
     - `combined_recommendations.py`: Generates recommendations
 
-### 4.3 Big Data Pipeline
+### 5.3 Big Data Pipeline
 
 - **Scraping**: `avito_scraper.py`, `moteur_scraper.py` (in `scraping/`)
 - **Kafka**: Streams data to `avito_cars`, `moteur_cars`
 - **Spark**: `spark_cleaning.py` processes data, stores in `cleaned_cars`
+- **Airflow**: Automates execution of `avito_scraper.py`, `moteur_scraper.py`
 - **Synthetic Data**: `users.py`, `user_preferences.py`, `car_views_by_user.py`, `favorite_cars.py`, `user_searches.py` (in `data_generator/`)
 - **Recommendation**: `combined_recommendations.py` (user-based, item-based, content-based, hybrid filtering)
 - **Price Prediction**: `model.py` (training), `ml_service.py` (Flask API), artifacts (`improved_final_model.h5`, `feature_scaler.pkl`, `target_scaler.pkl`, `categorical_mappings.pkl`)
 
-## 5. API Integration
+## 6. API Integration
 
 The frontend communicates with the backend API at `http://localhost:5000` using `axios`. The backend queries `cars_keyspace`, runs `combined_recommendations.py`, and calls the ML service.
 
-### 5.1 API Endpoints
+### 6.1 API Endpoints
 
 |Endpoint|Method|Frontend Page|Purpose|
 |---|---|---|---|
@@ -737,49 +899,54 @@ The frontend communicates with the backend API at `http://localhost:5000` using 
 |`/api/cars/bubbles`|GET|`VisualizationPage`|Bubble chart data|
 |`/api/cars`, `/api/cars/latest`|GET|`VehicleSection`|Featured cars|
 
-### 5.2 Authentication
+### 6.2 Authentication
 
 - **Frontend**: `AuthContext.js` stores JWT token, adds `Authorization: Bearer <token>` header.
 - **Backend**: `authController.js` handles login/register; `authMiddleware.js` verifies tokens.
 
-### 5.3 Recommendation Integration
+### 6.3 Recommendation Integration
 
 - **Backend**: `/api/users/recommendations` triggers `combined_recommendations.py`, retrieves results from `user_recommendations`.
 - **Frontend**: `UserProfilePage.js`, `VehicleSection.js` display `car_id`, `similarity_score`, `recommendation_reason`.
 
-### 5.4 Prediction Integration
+### 6.4 Prediction Integration
 
 - **Backend**: `/api/prediction` sends features to `http://localhost:5001/predict`, stores results in `car_predictions`.
 - **Frontend**: `PredictionPage.js` collects features (e.g., `door_count`, `mileage`), displays `predicted_price`.
 - **ML Service**: `ml_service.py` processes input, returns predicted price.
 
-## 6. Data Ingestion and Processing
+## 7. Data Ingestion and Processing
 
-### 6.1 Overview
+### 7.1 Overview
 
-- **Scraping**: Collects listings from Avito (`avito_scraper.py`) and Moteur (`moteur_scraper.py`).
+- **Scraping**: Collects listings from Avito (`avito_scraper.py`) and Moteur (`moteur_scraper.py`), automated via Airflow.
 - **Kafka**: Streams data to `avito_cars`, `moteur_cars`.
 - **Spark**: `spark_cleaning.py` cleans data, stores in `cleaned_cars`.
 
-### 6.2 Execution
+### 7.2 Execution
 
-1. **Start Kafka and Cassandra**:
+1. **Start Kafka, Cassandra, and Airflow**:
     
     ```bash
     ~/kafka/bin/zookeeper-server-start.sh -daemon ~/kafka/config/zookeeper.properties
     ~/kafka/bin/kafka-server-start.sh -daemon ~/kafka/config/server.properties
     ~/cassandra/bin/cassandra -R
+    conda activate venv
+    airflow scheduler
+    airflow webserver --port 8080
     ```
     
-2. **Run Scraping Scripts**:
-    
-    ```bash
-    cd ~/projects/cars_recommandation_pipeline/scraping
-    conda activate cenv
-    python avito_scraper.py
-    python moteur_scraper.py
-    ```
-    
+2. **Run Scraping Scripts (Manual or via Airflow)**:
+    - **Manual**:
+        
+        ```bash
+        cd ~/projects/cars_recommandation_pipeline/scraping
+        conda activate cenv
+        python avito_scraper.py
+        python moteur_scraper.py
+        ```
+        
+    - **Airflow**: Create a DAG in `~/airflow/dags` to schedule `avito_scraper.py` and `moteur_scraper.py`.
 3. **Run Spark Processing**:
     
     ```bash
@@ -794,9 +961,9 @@ The frontend communicates with the backend API at `http://localhost:5000` using 
     ```
     
 
-## 7. Synthetic Data Generation
+## 8. Synthetic Data Generation
 
-### 7.1 Overview
+### 8.1 Overview
 
 Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
 
@@ -806,7 +973,7 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
 - `favorite_cars.py`: Favorite cars
 - `user_searches.py`: Search queries
 
-### 7.2 Execution
+### 8.2 Execution
 
 1. **Navigate to Directory**:
     
@@ -832,9 +999,9 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     ```
     
 
-## 8. Recommendation System
+## 9. Recommendation System
 
-### 8.1 Overview
+### 9.1 Overview
 
 `combined_recommendations.py` generates recommendations using:
 
@@ -844,7 +1011,7 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
 - Hybrid filtering (SVD, cosine similarity)  
     Results are stored in `user_recommendations`.
 
-### 8.2 Execution
+### 9.2 Execution
 
 1. **Run Script**:
     
@@ -861,15 +1028,15 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     ```
     
 
-## 9. Price Prediction System
+## 10. Price Prediction System
 
-### 9.1 Overview
+### 10.1 Overview
 
 - **Training**: `model.py` trains a neural network on `preprocessed_data.csv`.
 - **Serving**: `ml_service.py` provides a Flask API at `http://localhost:5001/predict`.
 - **Artifacts**: `improved_final_model.h5`, `feature_scaler.pkl`, `target_scaler.pkl`, `categorical_mappings.pkl`.
 
-### 9.2 Execution
+### 10.2 Execution
 
 1. **Train Model (Optional)**:
     
@@ -892,7 +1059,7 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     ```
     
 
-## 10. Running the Application
+## 11. Running the Application
 
 1. **Start Services**:
     
@@ -900,6 +1067,9 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     ~/cassandra/bin/cassandra -R
     ~/kafka/bin/zookeeper-server-start.sh -daemon ~/kafka/config/zookeeper.properties
     ~/kafka/bin/kafka-server-start.sh -daemon ~/kafka/config/server.properties
+    conda activate venv
+    airflow scheduler
+    airflow webserver --port 8080
     cd ~/projects/cars_recommandation_pipeline/prediction
     conda activate cenv
     python ml_service.py
@@ -930,7 +1100,7 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     ```
     
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 - **Cassandra Errors**:
     - Verify: `netstat -tuln | grep 9042`
@@ -941,6 +1111,11 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
 - **Spark Errors**:
     - Verify connector: `ls /opt/spark-3.5.0/jars/spark-cassandra-connector_2.12-3.5.0.jar`
     - Check logs: `tail -f /opt/spark-3.5.0/logs/*`
+- **Airflow Errors**:
+    - Verify services: `netstat -tuln | grep 8080`
+    - Check logs: `tail -f ~/airflow/logs/*`
+    - Fix warnings: Set `load_examples = False` in `~/airflow/airflow.cfg`
+    - SQLite warning: Use PostgreSQL/MySQL for production
 - **Frontend CORS Errors**:
     - Check `server.js` for CORS
     - Verify `REACT_APP_API_URL`
@@ -953,9 +1128,10 @@ Scripts in `~/projects/cars_recommandation_pipeline/data_generator` generate:
     - Check logs: `tail -f ml_service.log`
     - Ensure dependencies: `pip install tensorflow==2.17.0 flask==3.0.3`
 
-## 12. Next Steps
+## 13. Next Steps
 
+- **Airflow DAG**: Create a DAG in `~/airflow/dags` to schedule `avito_scraper.py` and `moteur_scraper.py`.
 - **Testing**: Add Jest/Mocha tests for frontend and backend.
 - **Deployment**: Use Docker or Vercel for production.
 - **Enhancements**: Improve `PredictionPage.js` UI for feature input.
-- **Monitoring**: Add logging for ML service performance.
+- **Monitoring**: Add logging for ML service and Airflow performance.
