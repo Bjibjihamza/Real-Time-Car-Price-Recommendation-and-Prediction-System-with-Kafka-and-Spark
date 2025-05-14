@@ -8,7 +8,7 @@ const PredictionPage = () => {
   const car = location.state?.car || {};
 
   const [labels, setLabels] = useState({
-    brand: [],
+    brands: {},
     condition: [],
     door_count: [],
     equipment: [
@@ -30,12 +30,10 @@ const PredictionPage = () => {
     first_owner: [],
     fiscal_power: [],
     fuel_type: [],
-    model: [],
     origin: [],
     sector: [],
     seller_city: [],
-    transmission: [],
-    year: []
+    transmission: []
   });
   const [isLabelsLoading, setIsLabelsLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -61,20 +59,9 @@ const PredictionPage = () => {
       minute: '2-digit'
     }).replace(',', '')
   });
-  const initialEquipment = {};
-  labels.equipment.forEach(item => {
-    initialEquipment[item.replace(/\s+/g, '_').toLowerCase()] = false;
-  });
-  if (car.equipment) {
-    const equipmentList = car.equipment.toLowerCase().split(', ').map(item => item.trim());
-    equipmentList.forEach(item => {
-      const key = item.replace(/\s+/g, '_').toLowerCase();
-      if (key in initialEquipment) {
-        initialEquipment[key] = true;
-      }
-    });
-  }
-  const [equipment, setEquipment] = useState(initialEquipment);
+
+  // Initialize equipment state as an empty object until labels are loaded
+  const [equipment, setEquipment] = useState({});
   const [predictedPrice, setPredictedPrice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -83,9 +70,18 @@ const PredictionPage = () => {
     fetch('/labels_p.json')
       .then(response => response.json())
       .then(data => {
-        // Merge the hardcoded equipment with other labels from JSON
-        setLabels(prevLabels => ({
+        // Normalize brands to lowercase
+        const normalizedBrands = {};
+        for (const brand in data.brands) {
+          normalizedBrands[brand.toLowerCase()] = {
+            models: data.brands[brand].models
+          };
+        }
+
+        // Update labels state
+        const updatedLabels = {
           ...data,
+          brands: normalizedBrands,
           equipment: [
             "Abs",
             "Airbags",
@@ -102,7 +98,27 @@ const PredictionPage = () => {
             "Verrouillage Centralisé",
             "Vitres Électriques"
           ]
-        }));
+        };
+        setLabels(updatedLabels);
+
+        // Initialize equipment state after labels are loaded
+        const initialEquipment = {};
+        updatedLabels.equipment.forEach(item => {
+          initialEquipment[item.replace(/\s+/g, '_').toLowerCase()] = false;
+        });
+
+        // Apply pre-filled equipment from car if available
+        if (car.equipment) {
+          const equipmentList = car.equipment.toLowerCase().split(', ').map(item => item.trim());
+          equipmentList.forEach(item => {
+            const key = item.replace(/\s+/g, '_').toLowerCase();
+            if (key in initialEquipment) {
+              initialEquipment[key] = true;
+            }
+          });
+        }
+
+        setEquipment(initialEquipment);
         setIsLabelsLoading(false);
       })
       .catch(error => {
@@ -110,22 +126,32 @@ const PredictionPage = () => {
         setError('Failed to load form options.');
         setIsLabelsLoading(false);
       });
-  }, []);
+  }, [car.equipment]); // Add car.equipment as a dependency to handle updates
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
+    setFormData(prevFormData => {
+      const newFormData = {
+        ...prevFormData,
+        [name]: value
+      };
+      // Reset dependent fields when a parent field changes
+      if (name === 'brand') {
+        newFormData.model = '';
+        newFormData.year = '';
+      } else if (name === 'model') {
+        newFormData.year = '';
+      }
+      return newFormData;
     });
   };
 
   const handleEquipmentChange = (e) => {
     const { name, checked } = e.target;
-    setEquipment({
-      ...equipment,
+    setEquipment(prevEquipment => ({
+      ...prevEquipment,
       [name]: checked
-    });
+    }));
   };
 
   const combineEquipment = () => {
@@ -141,6 +167,13 @@ const PredictionPage = () => {
       setError('Please fill all required fields.');
       return;
     }
+
+    const mileageValue = parseInt(formData.mileage);
+    if (isNaN(mileageValue) || mileageValue > 999999) {
+      setError('Mileage must be a number and cannot exceed 999,999 km (6 digits).');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -163,6 +196,12 @@ const PredictionPage = () => {
       setLoading(false);
     }
   };
+
+  // Get available models based on selected brand
+  const availableModels = formData.brand && labels.brands[formData.brand] ? Object.keys(labels.brands[formData.brand].models) : [];
+
+  // Get available years based on selected brand and model
+  const availableYears = formData.brand && formData.model && labels.brands[formData.brand]?.models[formData.model] ? labels.brands[formData.brand].models[formData.model] : [];
 
   if (isLabelsLoading) {
     return (
@@ -203,8 +242,8 @@ const PredictionPage = () => {
                       required
                     >
                       <option value="">Select brand</option>
-                      {labels.brand.map(brand => (
-                        <option key={brand} value={brand.toLowerCase()}>{brand}</option>
+                      {Object.keys(labels.brands).map(brand => (
+                        <option key={brand} value={brand}>{brand}</option>
                       ))}
                     </select>
                   </div>
@@ -218,10 +257,11 @@ const PredictionPage = () => {
                       value={formData.model} 
                       onChange={handleInputChange}
                       required
+                      disabled={!formData.brand}
                     >
                       <option value="">Select model</option>
-                      {labels.model.map(model => (
-                        <option key={model} value={model.toLowerCase()}>{model}</option>
+                      {availableModels.map(model => (
+                        <option key={model} value={model}>{model}</option>
                       ))}
                     </select>
                   </div>
@@ -235,40 +275,31 @@ const PredictionPage = () => {
                       value={formData.year} 
                       onChange={handleInputChange}
                       required
+                      disabled={!formData.model}
                     >
                       <option value="">Select year</option>
-                      {labels.year.map(year => (
+                      {availableYears.map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
                   </div>
                   
-                  <div className="col-md-4">
-                    <label htmlFor="condition" className="form-label">Condition</label>
-                    <select 
-                      className="form-select" 
-                      id="condition" 
-                      name="condition" 
-                      value={formData.condition} 
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select condition</option>
-                      {labels.condition.map(condition => (
-                        <option key={condition} value={condition.toLowerCase()}>{condition}</option>
-                      ))}
-                    </select>
-                  </div>
                   
                   <div className="col-md-4">
                     <label htmlFor="mileage" className="form-label">Mileage (km)*</label>
                     <input 
-                      type="number" 
+                      type="text" 
                       className="form-control" 
                       id="mileage" 
                       name="mileage" 
                       value={formData.mileage} 
-                      onChange={handleInputChange}
-                      min="0"
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only digits and limit to 6 digits
+                        if (/^\d{0,6}$/.test(value)) {
+                          handleInputChange(e);
+                        }
+                      }}
                       placeholder="e.g. 75000"
                       required
                     />

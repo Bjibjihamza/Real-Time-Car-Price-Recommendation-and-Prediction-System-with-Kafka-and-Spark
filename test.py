@@ -12,7 +12,7 @@ def get_unique_values(column):
     unique_values = sorted(set(values[values != '']))
     return unique_values
 
-# Define the allowed equipment list from the image
+# Define the allowed equipment list
 allowed_equipment = [
     "Abs",
     "Airbags",
@@ -32,31 +32,43 @@ allowed_equipment = [
 
 # Function to clean equipment and get only allowed equipment items
 def get_unique_equipment():
-    # Combine all equipment entries, split by commas, and clean
     equipment_list = df['equipment'].replace(np.nan, '').str.split(',').explode()
-    # Clean each item: remove leading/trailing spaces and normalize
     equipment_list = equipment_list.str.strip().replace('', np.nan).dropna()
-    # Filter to only include allowed equipment
     filtered_equipment = [eq for eq in equipment_list if eq in allowed_equipment]
-    # Get unique equipment items and sort
     unique_equipment = sorted(set(filtered_equipment))
     return unique_equipment
 
+# Function to create nested structure for brands, models, and years
+def get_brand_model_year_hierarchy():
+    # Clean the data
+    df_cleaned = df.replace(np.nan, '').astype(str)
+    # Group by brand, then model, and collect years
+    hierarchy = {}
+    for brand in get_unique_values('brand'):
+        brand_data = df_cleaned[df_cleaned['brand'] == brand]
+        models = {}
+        for model in sorted(set(brand_data['model'][brand_data['model'] != ''])):
+            model_data = brand_data[brand_data['model'] == model]
+            years = sorted(set(model_data['year'][model_data['year'] != '']))
+            if years:  # Only include models with valid years
+                models[model] = years
+        if models:  # Only include brands with valid models
+            hierarchy[brand] = {"models": models}
+    return hierarchy
+
 # Define the labels structure
 labels = {
-    'brand': get_unique_values('brand'),
-    'condition': get_unique_values('condition'),
-    'door_count': get_unique_values('door_count'),
-    'equipment': get_unique_equipment(),
-    'first_owner': get_unique_values('first_owner'),
-    'fiscal_power': get_unique_values('fiscal_power'),
-    'fuel_type': get_unique_values('fuel_type'),
-    'model': get_unique_values('model'),
-    'origin': get_unique_values('origin'),
-    'sector': get_unique_values('sector'),
-    'seller_city': get_unique_values('seller_city'),
-    'transmission': get_unique_values('transmission'),
-    'year': get_unique_values('year')
+    "brands": get_brand_model_year_hierarchy(),
+    "condition": get_unique_values('condition'),
+    "door_count": get_unique_values('door_count'),
+    "equipment": get_unique_equipment(),
+    "first_owner": get_unique_values('first_owner'),
+    "fiscal_power": get_unique_values('fiscal_power'),
+    "fuel_type": get_unique_values('fuel_type'),
+    "origin": get_unique_values('origin'),
+    "sector": get_unique_values('sector'),
+    "seller_city": get_unique_values('seller_city'),
+    "transmission": get_unique_values('transmission')
 }
 
 # Save the labels to a JSON file

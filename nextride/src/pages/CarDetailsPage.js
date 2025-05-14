@@ -14,30 +14,122 @@ function CarDetailsPage() {
   const [error, setError] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+  const [labels, setLabels] = useState({
+    brands: {},
+    condition: [],
+    door_count: [],
+    equipment: [],
+    first_owner: [],
+    fiscal_power: [],
+    fuel_type: [],
+    origin: [],
+    sector: [],
+    seller_city: [],
+    transmission: []
+  });
+  const [isLabelsLoading, setIsLabelsLoading] = useState(true);
+
+  const [predictedPrice, setPredictedPrice] = useState(null);
+  const [predictionLoading, setPredictionLoading] = useState(false);
+  const [predictionError, setPredictionError] = useState(null);
 
   const BASE_URL = 'http://localhost:5000';
 
-  // Fetch car details and related data
+  useEffect(() => {
+    fetch('/labels_p.json')
+      .then(response => response.json())
+      .then(data => {
+        const normalizedBrands = {};
+        for (const brand in data.brands) {
+          normalizedBrands[brand.toLowerCase()] = {
+            models: Object.keys(data.brands[brand].models).reduce((acc, model) => {
+              acc[model.toLowerCase()] = data.brands[brand].models[model].map(String);
+              return acc;
+            }, {})
+          };
+        }
+
+        const updatedLabels = {
+          ...data,
+          brands: normalizedBrands,
+          equipment: [
+            "abs",
+            "airbags",
+            "caméra_de_recul",
+            "climatisation",
+            "esp",
+            "jantes_aluminium",
+            "limiteur_de_vitesse",
+            "ordinateur_de_bord",
+            "radar_de_recul",
+            "régulateur_de_vitesse",
+            "sièges_cuir",
+            "toit_ouvrant",
+            "verrouillage_centralisé",
+            "vitres_électriques"
+          ],
+          condition: data.condition.map(c => c.toLowerCase().replace(/\s+/g, '_')),
+          door_count: data.door_count.map(String),
+          first_owner: data.first_owner.map(o => o === 'Oui' || o === 'Yes' ? 'Oui' : 'Non'),
+          fiscal_power: data.fiscal_power.map(String),
+          fuel_type: data.fuel_type.map(f => f.toLowerCase()),
+          origin: data.origin.map(o => o.toLowerCase()),
+          sector: data.sector.map(s => s.toLowerCase()),
+          seller_city: data.seller_city.map(s => s.toLowerCase()),
+          transmission: data.transmission.map(t => t.toLowerCase())
+        };
+        setLabels(updatedLabels);
+        setIsLabelsLoading(false);
+      })
+      .catch(error => {
+        console.error('Error loading labels:', error);
+        setError('Failed to load form options.');
+        setIsLabelsLoading(false);
+      });
+  }, []);
+
   useEffect(() => {
     const loadCarDetails = async () => {
       try {
         setLoading(true);
 
-        // Fetch car details
-        const carResponse = await axios.get(`http://localhost:5000/api/cars/${carId}`);
+        const carResponse = await axios.get(`${BASE_URL}/api/cars/${carId}`);
         console.log('Car API response:', JSON.stringify(carResponse.data, null, 2));
         const carData = carResponse.data.car;
+
         if (!carData || typeof carData !== 'object' || !carData.brand || !carData.model) {
           throw new Error('Invalid or missing car data in response');
         }
-        setCar(carData);
 
-        // Load images dynamically based on image_folder (limit to 5 images to avoid excessive requests)
-        if (carData.image_folder) {
+        const normalizedCar = {
+          id: carData.id || carId,
+          brand: carData.brand ? String(carData.brand).toLowerCase() : '',
+          model: carData.model ? String(carData.model).toLowerCase() : '',
+          year: carData.year ? String(carData.year) : '',
+          mileage: carData.mileage ? String(carData.mileage) : '0',
+          fuel_type: carData.fuel_type ? String(carData.fuel_type).toLowerCase() : '',
+          transmission: carData.transmission ? String(carData.transmission).toLowerCase() : '',
+          fiscal_power: carData.fiscal_power ? String(carData.fiscal_power).replace(' CV', '') : '',
+          door_count: carData.door_count ? String(carData.door_count) : '',
+          first_owner: carData.first_owner ? (carData.first_owner === 'Oui' || carData.first_owner === 'Yes' ? 'Oui' : 'Non') : '',
+          origin: carData.origin ? String(carData.origin).toLowerCase() : '',
+          seller_city: carData.seller_city ? String(carData.seller_city).toLowerCase() : '',
+          sector: carData.sector ? String(carData.sector).toLowerCase() : '',
+          equipment: carData.equipment || '',
+          condition: carData.condition ? String(carData.condition).toLowerCase().replace(/\s+/g, '_') : '',
+          price: carData.price || null,
+          title: carData.title || `${carData.brand} ${carData.model}`,
+          publication_date: carData.publication_date || '',
+          image_folder: carData.image_folder || 'default'
+        };
+        setCar(normalizedCar);
+        console.log('Normalized car data being passed to PredictionPage:', JSON.stringify(normalizedCar, null, 2));
+
+        if (normalizedCar.image_folder) {
           const loadedImages = [];
           const maxImages = 5;
           for (let index = 1; index <= maxImages; index++) {
-            const imageUrl = `${BASE_URL}/images/cars/${carData.image_folder}/image_${index}.jpg`;
+            const imageUrl = `${BASE_URL}/images/cars/${normalizedCar.image_folder}/image_${index}.jpg`;
             try {
               await axios.head(imageUrl);
               loadedImages.push(imageUrl);
@@ -50,10 +142,9 @@ function CarDetailsPage() {
           setImages([`${BASE_URL}/images/cars/default/image_1.jpg`]);
         }
 
-        // Check if this car is in user's favorites
         if (user) {
           try {
-            const favoritesResponse = await axios.get('http://localhost:5000/api/users/favorites', {
+            const favoritesResponse = await axios.get(`${BASE_URL}/api/users/favorites`, {
               headers: { Authorization: `Bearer ${user.token}` },
             });
             const favoriteCars = favoritesResponse.data.cars || [];
@@ -63,11 +154,10 @@ function CarDetailsPage() {
           }
         }
 
-        // Log this view if user is logged in
         if (user) {
           try {
             await axios.post(
-              'http://localhost:5000/api/cars/view',
+              `${BASE_URL}/api/cars/view`,
               { userId: user.userId, carId, viewSource: 'detail_page' },
               { headers: { Authorization: `Bearer ${user.token}` } }
             );
@@ -76,11 +166,10 @@ function CarDetailsPage() {
           }
         }
 
-        // Fetch similar cars
-        const similarResponse = await axios.get('http://localhost:5000/api/cars', {
+        const similarResponse = await axios.get(`${BASE_URL}/api/cars`, {
           params: {
-            brand: carData.brand,
-            model: carData.model,
+            brand: normalizedCar.brand,
+            model: normalizedCar.model,
             limit: 3,
           },
         });
@@ -105,6 +194,124 @@ function CarDetailsPage() {
     loadCarDetails();
   }, [carId, user]);
 
+  useEffect(() => {
+    if (!car || isLabelsLoading || predictionLoading || predictedPrice || predictionError) return;
+
+    const predictPrice = async () => {
+      console.log('Car data for prediction:', car);
+
+      const requiredFields = ['brand', 'model', 'mileage', 'fuel_type', 'transmission', 'fiscal_power'];
+      for (const field of requiredFields) {
+        if (!car[field]) {
+          setPredictionError(`Missing required field: ${field}`);
+          return;
+        }
+      }
+
+      const mileageValue = parseFloat(car.mileage);
+      if (isNaN(mileageValue) || mileageValue > 999999) {
+        setPredictionError('Mileage must be a number and cannot exceed 999,999 km (6 digits).');
+        return;
+      }
+
+      // Normalize and validate fields
+      const normalizedBrand = car.brand.toLowerCase().replace(' ', '-'); // Adjust for labels_p.json format (e.g., "land rover" -> "land-rover")
+      const normalizedModel = car.model.toLowerCase();
+      const normalizedYear = car.year ? String(car.year) : '';
+
+      const validatedBrand = Object.keys(labels.brands).includes(normalizedBrand) ? normalizedBrand : 'unknown';
+      const validatedModel = labels.brands[validatedBrand]?.models[normalizedModel] ? normalizedModel : 'unknown';
+
+      // Handle missing or invalid year
+      let validatedYear;
+      if (!normalizedYear || isNaN(parseInt(normalizedYear))) {
+        const availableYears = labels.brands[validatedBrand]?.models[validatedModel] || [];
+        if (availableYears.length === 0) {
+          validatedYear = 2015; // Default fallback year if no years are available
+        } else {
+          // Sort years in descending order and select the most recent year <= current year (2025)
+          const currentYear = new Date().getFullYear(); // 2025
+          const sortedYears = availableYears.map(year => parseInt(year)).sort((a, b) => b - a);
+          validatedYear = sortedYears.find(year => year <= currentYear) || sortedYears[sortedYears.length - 1] || 2015;
+        }
+      } else {
+        validatedYear = labels.brands[validatedBrand]?.models[validatedModel]?.includes(normalizedYear)
+          ? parseInt(normalizedYear)
+          : 2015;
+      }
+
+      const validatedFuelType = labels.fuel_type.includes(car.fuel_type.toLowerCase()) ? car.fuel_type.toLowerCase() : 'diesel';
+      const validatedTransmission = labels.transmission.includes(car.transmission.toLowerCase()) ? car.transmission.toLowerCase() : 'manuelle';
+      const validatedFiscalPower = labels.fiscal_power.includes(car.fiscal_power) ? parseInt(car.fiscal_power) : 6;
+      const validatedDoorCount = labels.door_count.includes(car.door_count) ? parseInt(car.door_count) : 4;
+      const validatedFirstOwner = labels.first_owner.includes(car.first_owner) ? car.first_owner : 'Non';
+      const validatedOrigin = labels.origin.includes(car.origin.toLowerCase()) ? car.origin.toLowerCase().replace('ww au maroc', 'ww_au_maroc') : 'ww_au_maroc';
+      const validatedSellerCity = labels.seller_city.includes(car.seller_city.toLowerCase()) ? car.seller_city.toLowerCase() : 'casablanca';
+      const validatedSector = labels.sector.includes(car.sector.toLowerCase()) ? car.sector.toLowerCase() : 'particulier';
+      const validatedCondition = labels.condition.includes(car.condition.toLowerCase()) ? car.condition.toLowerCase() : 'tres_bon';
+
+      // Process equipment to match ml_service.py's EQUIPMENT_TYPES
+      const equipmentList = car.equipment
+        ? car.equipment.toLowerCase().split(',').map(item => item.trim().replace(/\s+/g, '_').replace('à_distance', ''))
+        : [];
+      const equipmentData = labels.equipment.reduce((acc, item) => {
+        acc[item] = equipmentList.includes(item);
+        return acc;
+      }, {});
+      const combinedEquipment = Object.entries(equipmentData)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([key, _]) => key.replace('_', ' '))
+        .join(', ');
+
+      setPredictionLoading(true);
+      setPredictionError(null);
+
+      try {
+        const predictionData = {
+          userId: user?.userId || 'anonymous',
+          brand: validatedBrand, // "land-rover"
+          model: validatedModel, // "range rover evoque"
+          condition: validatedCondition, // "excellent" (adjusted to "tres_bon" if not in labels)
+          year: validatedYear, // 2020 (or 2025 if year was missing)
+          mileage: mileageValue, // 92499
+          fuel_type: validatedFuelType, // "diesel"
+          transmission: validatedTransmission, // "automatique"
+          fiscal_power: validatedFiscalPower, // 8
+          door_count: validatedDoorCount, // 5
+          first_owner: validatedFirstOwner, // "Oui"
+          origin: validatedOrigin, // "ww_au_maroc"
+          seller_city: validatedSellerCity, // "aïn chock"
+          sector: validatedSector, // "casablanca"
+          equipment: combinedEquipment, // "" (since equipment is empty)
+          publication_date: car.publication_date || '12/05/2025 12:16', // "12/05/2025 12:16"
+        };
+
+        console.log('Prediction request:', {
+          url: 'http://localhost:5001/predict',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          data: predictionData,
+        });
+
+        const response = await axios.post('http://localhost:5001/predict', predictionData);
+        const predictedPriceValue = response.data.prediction.predictedPrice;
+        setPredictedPrice(predictedPriceValue);
+      } catch (error) {
+        console.error('Prediction error details:', {
+          message: error.message,
+          response: error.response ? error.response.data : 'No response',
+          status: error.response ? error.response.status : 'No status',
+          request: error.request ? error.request : 'No request',
+        });
+        setPredictionError('Failed to predict price. Please try again.');
+      } finally {
+        setPredictionLoading(false);
+      }
+    };
+
+    predictPrice();
+  }, [car, user, isLabelsLoading, labels]);
+
   const handleFavoriteToggle = async () => {
     if (!user) {
       setError('Please log in to save vehicles.');
@@ -114,13 +321,13 @@ function CarDetailsPage() {
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       if (isFavorite) {
-        await axios.delete('http://localhost:5000/api/users/favorites', {
+        await axios.delete(`${BASE_URL}/api/users/favorites`, {
           ...config,
           data: { carId },
         });
         setIsFavorite(false);
       } else {
-        await axios.post('http://localhost:5000/api/users/favorites', { carId }, config);
+        await axios.post(`${BASE_URL}/api/users/favorites`, { carId }, config);
         setIsFavorite(true);
       }
     } catch (error) {
@@ -146,7 +353,7 @@ function CarDetailsPage() {
     }
   };
 
-  if (loading) {
+  if (loading || isLabelsLoading) {
     return (
       <div className="container py-5 text-center">
         <div className="spinner-border text-warning" role="status">
@@ -171,7 +378,6 @@ function CarDetailsPage() {
 
   return (
     <div className="container py-4">
-      {/* Breadcrumb navigation */}
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
@@ -189,7 +395,6 @@ function CarDetailsPage() {
         </ol>
       </nav>
 
-      {/* Back button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <Link to="/" className="btn btn-light d-flex align-items-center">
           <FaArrowLeft className="me-2" /> Back
@@ -209,7 +414,6 @@ function CarDetailsPage() {
       </div>
 
       <div className="row g-4">
-        {/* Left column - Car images */}
         <div className="col-lg-7">
           <div className="card border-0 rounded-4 shadow-sm">
             <div className="card-body p-0">
@@ -227,7 +431,6 @@ function CarDetailsPage() {
                 )}
               </div>
 
-              {/* Thumbnail images */}
               <div className="d-flex overflow-auto p-3 gap-2">
                 {images.map((image, index) => (
                   <img
@@ -244,7 +447,6 @@ function CarDetailsPage() {
           </div>
         </div>
 
-        {/* Right column - Car details */}
         <div className="col-lg-5">
           <div className="card border-0 rounded-4 shadow-sm mb-4">
             <div className="card-body">
@@ -278,18 +480,32 @@ function CarDetailsPage() {
                 <span>{car.seller_city || 'N/A'}</span>
               </div>
 
-              <div className="d-grid">
-                <a href="tel:+212600000000" className="btn btn-warning btn-lg mb-2">
+              {predictionLoading && <p>Loading predicted price...</p>}
+              {predictionError && <p className="text-danger">{predictionError}</p>}
+              {predictedPrice && (
+                <p className="text-success mb-4" style={{fontWeight :"600"}}>
+                  Predicted Price: {predictedPrice.toLocaleString()} MAD
+                </p>
+              )}
+
+              <div className="d-grid gap-3">
+                <a href="tel:+212600000000" className="btn btn-warning btn-lg">
                   Contact Seller
                 </a>
-                <button className="btn btn-outline-warning">Request Price Prediction</button>
+                <div className="card border-0 rounded-4 shadow-sm bg-warning bg-opacity-10">
+                  <div className="card-body text-center py-4">
+                    <h4 className="fw-bold mb-3">Price Analysis</h4>
+                    <p className="mb-4">
+                      The predicted price for this {car.brand} {car.model} has been calculated using our ML-powered tool.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Car details tabs */}
       <div className="card border-0 rounded-4 shadow-sm mt-4">
         <div className="card-body">
           <ul className="nav nav-tabs" id="carDetailsTabs" role="tablist">
@@ -338,12 +554,12 @@ function CarDetailsPage() {
                 About this {car.brand} {car.model}
               </h5>
               <p>
-                This {car.year || 'N/A'} {car.brand} {car.model} comes with {car.transmission} transmission and a{' '}
+                This {car.year || 'N/A'} {car.brand} {car.model} comes with {car.transmission || 'N/A'} transmission and a{' '}
                 {(car.fuel_type || '').toLowerCase()} engine. With {(car.mileage || 0).toLocaleString()} kilometers on the odometer,
-                this vehicle is in {(car.condition || '').toLowerCase()} condition.
+                this vehicle is in {(car.condition || '').toLowerCase().replace('_', ' ')} condition.
               </p>
               <p>
-                The vehicle is {car.first_owner === 'Yes' ? 'first-hand' : 'not first-hand'} and its origin is{' '}
+                The vehicle is {car.first_owner === 'Oui' ? 'first-hand' : 'not first-hand'} and its origin is{' '}
                 {(car.origin || '').toLowerCase()}. It was published on{' '}
                 {car.publication_date
                   ? new Date(car.publication_date).toLocaleDateString()
@@ -424,7 +640,7 @@ function CarDetailsPage() {
                       </tr>
                       <tr>
                         <th scope="row">Condition</th>
-                        <td>{car.condition || 'N/A'}</td>
+                        <td>{car.condition ? car.condition.replace('_', ' ') : 'N/A'}</td>
                       </tr>
                       <tr>
                         <th scope="row">First Owner</th>
@@ -439,24 +655,6 @@ function CarDetailsPage() {
         </div>
       </div>
 
-      {/* Price prediction section */}
-      <div className="card border-0 rounded-4 shadow-sm mt-4 bg-warning bg-opacity-10">
-        <div className="card-body text-center py-4">
-          <h4 className="fw-bold mb-3">Get a Price Analysis</h4>
-          <p className="mb-4">
-            Is this {car.brand} {car.model} fairly priced? Use our ML-powered price prediction tool to find out!
-          </p>
-          <Link
-            to="/predict"
-            state={{ car }}
-            className="btn btn-warning btn-lg px-4"
-          >
-            Predict Fair Price
-          </Link>
-        </div>
-      </div>
-
-      {/* Similar cars section */}
       {similarCars.length > 0 && (
         <div className="mt-5">
           <h4 className="fw-bold mb-4">Similar Vehicles You Might Like</h4>

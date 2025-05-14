@@ -34,15 +34,66 @@ def recency_weight(timestamp, current_time):
         logging.warning(f"Invalid timestamp {timestamp}: {e}")
         return 0.5
 
+def insert_synthetic_users_and_interactions(session, num_users=10, num_cars=50):
+    try:
+        car_ids = session.execute("SELECT id FROM cleaned_cars LIMIT %s", [num_cars])
+        car_ids = [str(row.id) for row in car_ids]
+        if not car_ids:
+            logging.warning("No cars available for synthetic data")
+            return
+        
+        for _ in range(num_users):
+            user_id = uuid.uuid4()
+            session.execute(
+                """
+                INSERT INTO users (user_id, age, created_at, email, location, password, username)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                [user_id, random.randint(18, 50), datetime.now(pytz.UTC), f"user{random.randint(1,1000)}@example.com",
+                 "Unknown", "$2a$10$MuPnWCDgo4AHQY4NyyU/pe0a9en3ORc91xFCOLBOpgtAsrCz8fAxK", f"user{random.randint(1,1000)}"]
+            )
+            session.execute(
+                """
+                INSERT INTO user_preferences (user_id, preferred_brands, preferred_fuel_types, preferred_transmissions, 
+                    budget_max, budget_min, mileage_max, mileage_min, preferred_years)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                [user_id, set(random.sample(['Renault', 'Volkswagen', 'Peugeot', 'Dacia'], 2)),
+                 {'Diesel'}, {'Automatique', 'Manuelle'}, random.randint(100000, 300000), random.randint(50000, 100000),
+                 200000, 0, {2015, 2016, 2017, 2018}]
+            )
+            for _ in range(random.randint(5, 10)):
+                car_id = random.choice(car_ids)
+                session.execute(
+                    """
+                    INSERT INTO car_views_by_user (user_id, view_date, view_timestamp, car_id, view_duration_seconds, view_source)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    [user_id, datetime.now(pytz.UTC).date(), datetime.now(pytz.UTC),
+                     uuid.UUID(car_id), random.randint(10, 300), random.choice(['BROWSE', 'SEARCH'])]
+                )
+            for _ in range(random.randint(2, 5)):
+                car_id = random.choice(car_ids)
+                session.execute(
+                    """
+                    INSERT INTO favorite_cars_by_user (user_id, added_date, added_timestamp, car_id)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    [user_id, datetime.now(pytz.UTC).date(), datetime.now(pytz.UTC), uuid.UUID(car_id)]
+                )
+        logging.info(f"Inserted {num_users} synthetic users")
+    except Exception as e:
+        logging.error(f"Error inserting synthetic users: {e}")
+
 def fetch_data(session, user_id):
     try:
         user_id_str = str(user_id)
-        views_query = "SELECT user_id, car_id, view_timestamp FROM car_views_by_user WHERE user_id = %s"
-        views_rows = session.execute(SimpleStatement(views_query), [uuid.UUID(user_id)])
+        views_query = "SELECT user_id, car_id, view_timestamp FROM car_views_by_user"
+        views_rows = session.execute(SimpleStatement(views_query))
         views_data = [(str(row.user_id), str(row.car_id), row.view_timestamp) for row in views_rows]
 
-        favs_query = "SELECT user_id, car_id, added_timestamp FROM favorite_cars_by_user WHERE user_id = %s"
-        favs_rows = session.execute(SimpleStatement(favs_query), [uuid.UUID(user_id)])
+        favs_query = "SELECT user_id, car_id, added_timestamp FROM favorite_cars_by_user"
+        favs_rows = session.execute(SimpleStatement(favs_query))
         favs_data = [(str(row.user_id), str(row.car_id), row.added_timestamp) for row in favs_rows]
 
         prefs_query = """
@@ -60,9 +111,9 @@ def fetch_data(session, user_id):
                 row.preferred_transmissions or set(),
                 row.budget_max or 0.0,
                 row.budget_min or 0.0,
-                row.mileage_max or 0.0,
+                row.mileage_max or 200000.0,
                 row.mileage_min or 0.0,
-                row.preferred_years or set()
+                row.preferred_years or {2015, 2016, 2017, 2018}
             ) for row in prefs_rows
         ]
 
@@ -75,7 +126,7 @@ def fetch_data(session, user_id):
             (
                 str(row.id),
                 row.brand or 'unknown',
-                row.door_count,
+                row.door_count or 5,
                 row.fuel_type or 'unknown',
                 row.transmission or 'unknown',
                 row.price or np.nan,
@@ -98,6 +149,11 @@ def delete_existing_recommendations(session, user_id):
         logging.error(f"Failed to delete recommendations for user {user_id}: {e}")
         raise
 
+
+
+
+
+
 def get_fallback_recommendations(session, used_car_ids):
     try:
         query = "SELECT id FROM cleaned_cars LIMIT 10"
@@ -111,6 +167,17 @@ def get_fallback_recommendations(session, used_car_ids):
     except Exception as e:
         logging.error(f"Error fetching fallback recommendations: {e}")
         return []
+    
+
+
+
+
+
+
+
+
+
+
 
 def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids):
     try:
@@ -141,7 +208,7 @@ def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_i
             [f'transmission_{tr}' for tr in all_transmissions]
         )
 
-        user_prefs_df['preferred_years_mean'] = user_prefs_df['preferred_years'].apply(lambda x: np.mean(list(x)) if x else 2018)
+        user_prefs_df['preferred_years_mean'] = user_prefs_df['preferred_years'].apply(lambda x: np.mean(list(x)) if x else 2016.5)
         user_num_values = MinMaxScaler().fit_transform(
             user_prefs_df[['budget_max', 'budget_min', 'mileage_max', 'mileage_min', 'preferred_years_mean']]
         )
@@ -184,6 +251,8 @@ def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_i
         car_features_df = pd.concat([car_cat_df, car_num_df], axis=1)
 
         similarity_matrix = cosine_similarity(user_features_df.values, car_features_df.values)
+        max_similarity = np.max(similarity_matrix) if np.max(similarity_matrix) > 0 else 1
+        similarity_matrix = similarity_matrix / max_similarity
         similarity_df = pd.DataFrame(similarity_matrix, index=user_features_df.index, columns=car_features_df.index)
 
         user_similarities = similarity_df.loc[user_id]
@@ -218,6 +287,19 @@ def content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_i
         logging.error(f"Error in content-based filtering: {e}")
         return get_fallback_recommendations(session, used_car_ids)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 def user_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
     try:
         interactions = []
@@ -234,8 +316,8 @@ def user_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
         )
         logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
 
-        if user_item_matrix.shape[0] < 2:
-            logging.warning(f"Only one user in matrix for {user_id}, using fallback")
+        if user_item_matrix.shape[0] < 5:
+            logging.warning(f"Insufficient users ({user_item_matrix.shape[0]}) for user-based filtering, using fallback")
             return get_fallback_recommendations(session, used_car_ids)
 
         user_similarity_matrix = cosine_similarity(user_item_matrix)
@@ -264,12 +346,27 @@ def user_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
         max_score = max(candidate_scores.values())
         candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
         top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        return [(car_id, score, "Based on similarities with another user") for car_id, score in top_recs]
+        return [(car_id, score, "Based on similarities with other users") for car_id, score in top_recs]
     except Exception as e:
         logging.error(f"Error in user-based collaborative filtering: {e}")
         return get_fallback_recommendations(session, used_car_ids)
 
-def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids, cars_df):
     try:
         interactions = []
         for _, row in views_df.iterrows():
@@ -293,8 +390,10 @@ def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
         user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
         user_interactions = user_views.union(user_favs)
 
+        valid_cars = set(cars_df['car_id'])
+        user_interactions = user_interactions.intersection(valid_cars)
         if not user_interactions:
-            logging.warning(f"No interactions for {user_id}, using fallback")
+            logging.warning(f"No valid car interactions for {user_id}, using fallback")
             return get_fallback_recommendations(session, used_car_ids)
 
         candidate_scores = {}
@@ -302,7 +401,7 @@ def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
             if car_id in car_similarity_df.index:
                 similar_cars = car_similarity_df.loc[car_id].dropna()
                 for similar_car_id, sim_score in similar_cars.items():
-                    if similar_car_id not in user_interactions.union(used_car_ids) and sim_score > 0:
+                    if similar_car_id not in user_interactions.union(used_car_ids) and sim_score > 0.1:
                         candidate_scores[similar_car_id] = candidate_scores.get(similar_car_id, 0) + sim_score
 
         if not candidate_scores:
@@ -312,10 +411,27 @@ def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
         max_score = max(candidate_scores.values())
         candidate_scores = {car_id: (score / max_score) * 0.9 for car_id, score in candidate_scores.items()}
         top_recs = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        return [(car_id, score, "Based on your viewing - search and favorite patterns") for car_id, score in top_recs]
+        recommendations = []
+        for car_id, score in top_recs:
+            used_car_ids.add(car_id)
+            recommendations.append((car_id, score, "Based on your viewing, search, and favorite patterns"))
+        return recommendations
     except Exception as e:
         logging.error(f"Error in item-based collaborative filtering: {e}")
         return get_fallback_recommendations(session, used_car_ids)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, current_time, session, used_car_ids):
     try:
@@ -333,13 +449,13 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
         )
         logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
 
-        if user_item_matrix.shape[0] < 2:
-            logging.warning(f"Only one user in matrix for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
+        if user_item_matrix.shape[0] < 5:
+            logging.warning(f"Insufficient users ({user_item_matrix.shape[0]}) for hybrid recommendations, using content-based")
+            return content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids)
 
         R = user_item_matrix.values
         min_dim = min(R.shape)
-        k = min(20, min_dim - 1)
+        k = min(10, min_dim - 1) if min_dim > 1 else 1
         U, sigma, Vt = svds(R, k=k)
         sigma = np.diag(sigma)
         R_pred = np.dot(np.dot(U, sigma), Vt)
@@ -373,7 +489,7 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
             [f'transmission_{tr}' for tr in all_transmissions]
         )
 
-        user_prefs_df['preferred_years_mean'] = user_prefs_df['preferred_years'].apply(lambda x: np.mean(list(x)) if x else 2018)
+        user_prefs_df['preferred_years_mean'] = user_prefs_df['preferred_years'].apply(lambda x: np.mean(list(x)) if x else 2016.5)
         user_num_values = MinMaxScaler().fit_transform(
             user_prefs_df[['budget_max', 'budget_min', 'mileage_max', 'mileage_min', 'preferred_years_mean']]
         )
@@ -420,8 +536,8 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
 
         common_cars = pred_df.columns.intersection(content_similarity_df.columns)
         if not common_cars.size:
-            logging.warning(f"No common cars for hybrid recommendations for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
+            logging.warning(f"No common cars for hybrid recommendations for {user_id}, using content-based")
+            return content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids)
 
         pred_df = pred_df[common_cars]
         content_similarity_df = content_similarity_df[common_cars]
@@ -429,7 +545,7 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
         collab_scores = MinMaxScaler().fit_transform(pred_df.loc[[user_id]].values.reshape(-1, 1)).reshape(pred_df.loc[[user_id]].shape)
         content_scores = MinMaxScaler().fit_transform(content_similarity_df.loc[[user_id]].values.reshape(-1, 1)).reshape(content_similarity_df.loc[[user_id]].shape)
 
-        alpha = 0.3
+        alpha = 0.2
         hybrid_scores = alpha * collab_scores + (1 - alpha) * content_scores
         hybrid_df = pd.DataFrame(hybrid_scores, index=[user_id], columns=common_cars)
 
@@ -437,8 +553,8 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
         user_favs = set(favs_df[favs_df['user_id'] == user_id]['car_id'])
         unrated_cars = [col for col in hybrid_df.columns if col not in user_views.union(user_favs).union(used_car_ids)]
         if not unrated_cars:
-            logging.warning(f"No unrated cars for hybrid recommendations for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
+            logging.warning(f"No unrated cars for hybrid recommendations for {user_id}, using content-based")
+            return content_based_filtering(user_id, user_prefs_df, cars_df, session, used_car_ids)
 
         top_cars = hybrid_df.loc[user_id, unrated_cars].nlargest(3).index
         top_scores = hybrid_df.loc[user_id, top_cars].values
@@ -450,18 +566,23 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
             reason = f"Hybrid: {alpha:.2f}*collaborative ({collab_score:.2f}) + {1-alpha:.2f}*content-based ({content_score:.2f})"
             recommendations.append((car_id, score, reason))
 
-        if not recommendations:
-            logging.warning(f"No hybrid recommendations for {user_id}, using fallback")
-            return get_fallback_recommendations(session, used_car_ids)
-
         return recommendations
     except Exception as e:
         logging.error(f"Error in hybrid recommendations: {e}")
         return get_fallback_recommendations(session, used_car_ids)
 
+
+
+
+
+
+
 def generate_recommendations(user_id):
     session, cluster = setup_cassandra_session()
     try:
+        # Insert synthetic users if needed
+        insert_synthetic_users_and_interactions(session, num_users=10, num_cars=50)
+
         views_data, favs_data, prefs_data, cars_data = fetch_data(session, user_id)
         views_df = pd.DataFrame(views_data, columns=['user_id', 'car_id', 'view_timestamp'])
         favs_df = pd.DataFrame(favs_data, columns=['user_id', 'car_id', 'added_timestamp'])
@@ -475,6 +596,14 @@ def generate_recommendations(user_id):
             columns=['car_id', 'brand', 'door_count', 'fuel_type', 'transmission', 'price', 'mileage', 'year']
         )
 
+        # Validate car data
+        valid_cars = set(cars_df['car_id'])
+        views_df = views_df[views_df['car_id'].isin(valid_cars)]
+        favs_df = favs_df[favs_df['car_id'].isin(valid_cars)]
+        if views_df.empty and favs_df.empty:
+            logging.warning(f"No valid interactions for user {user_id}, using fallback")
+            return get_fallback_recommendations(session, set())
+
         delete_existing_recommendations(session, user_id)
 
         current_time = datetime.now(pytz.UTC)
@@ -486,7 +615,7 @@ def generate_recommendations(user_id):
         user_based_recs = user_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids)
         used_car_ids.update(car_id for car_id, _, _ in user_based_recs)
 
-        item_based_recs = item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids)
+        item_based_recs = item_based_collaborative_filtering(user_id, views_df, favs_df, current_time, session, used_car_ids, cars_df)
         used_car_ids.update(car_id for car_id, _, _ in item_based_recs)
 
         hybrid_recs = hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, current_time, session, used_car_ids)
@@ -505,12 +634,13 @@ def generate_recommendations(user_id):
                     'rank': rank,
                     'similarity_score': float(score),
                     'recommendation_reason': reason,
+                    'method': method,
                     'created_at': current_time
                 })
 
         insert_query = """
-            INSERT INTO user_recommendations (user_id, car_id, created_at, rank, recommendation_reason, similarity_score)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO user_recommendations (user_id, car_id, created_at, rank, recommendation_reason, method, similarity_score)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         for rec in all_recommendations:
             try:
@@ -522,6 +652,7 @@ def generate_recommendations(user_id):
                         rec['created_at'],
                         rec['rank'],
                         rec['recommendation_reason'],
+                        rec['method'],
                         rec['similarity_score']
                     )
                 )
@@ -535,6 +666,13 @@ def generate_recommendations(user_id):
         sys.exit(1)
     finally:
         cluster.shutdown()
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

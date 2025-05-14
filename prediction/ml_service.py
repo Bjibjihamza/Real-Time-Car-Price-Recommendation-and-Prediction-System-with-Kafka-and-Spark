@@ -6,12 +6,14 @@ import pickle
 from datetime import datetime
 import logging
 import os
+from flask_cors import CORS
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Define paths
 MODEL_PATH = 'improved_final_model.h5'
