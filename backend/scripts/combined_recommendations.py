@@ -433,6 +433,7 @@ def item_based_collaborative_filtering(user_id, views_df, favs_df, current_time,
 
 
 
+
 def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, current_time, session, used_car_ids):
     try:
         interactions = []
@@ -447,6 +448,7 @@ def hybrid_recommendations(user_id, views_df, favs_df, user_prefs_df, cars_df, c
         user_item_matrix = pd.pivot_table(
             interaction_df, values='rating', index='user_id', columns='car_id', aggfunc='max', fill_value=0
         )
+    
         logging.info(f"User-item matrix shape: {user_item_matrix.shape}")
 
         if user_item_matrix.shape[0] < 5:
